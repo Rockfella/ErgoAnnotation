@@ -2,13 +2,13 @@
 import bpy
 import time
 import datetime
-
+from bpy.types import Operator
 # ------------------------------------------------------------------------
 #    HOTKEY: ZERO
 # ------------------------------------------------------------------------
 
 
-class onPressKeyZERO(bpy.types.Operator):
+class onPressKeyZERO(Operator):
     """Work Macro"""
     bl_idname = "object.on_press_key_zero"
     bl_label = "onPressKeyZERO"
@@ -21,7 +21,7 @@ class onPressKeyZERO(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class onReleaseKeyZERO(bpy.types.Operator):
+class onReleaseKeyZERO(Operator):
     """On Release"""
     bl_idname = "object.on_release_key_zero"
     bl_label = "onReleaseKeyZERO"
@@ -37,7 +37,7 @@ class onReleaseKeyZERO(bpy.types.Operator):
 #    HOTKEY: ONE
 # ------------------------------------------------------------------------
 
-class onPressKeyONE(bpy.types.Operator):
+class onPressKeyONE(Operator):
     """Work Macro"""
     bl_idname = "object.on_press_key_one"
     bl_label = "onPressKeyONE"
@@ -50,7 +50,7 @@ class onPressKeyONE(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class onReleaseKeyONE(bpy.types.Operator):
+class onReleaseKeyONE(Operator):
     """On Release"""
     bl_idname = "object.on_release_key_one"
     bl_label = "onReleaseKeyONE"
@@ -66,7 +66,7 @@ class onReleaseKeyONE(bpy.types.Operator):
 #    HOTKEY: TWO
 # ------------------------------------------------------------------------
 
-class onPressKeyTWO(bpy.types.Operator):
+class onPressKeyTWO(Operator):
     """Work Macro"""
     bl_idname = "object.on_press_key_two"
     bl_label = "onPressKeyTWO"
@@ -79,7 +79,7 @@ class onPressKeyTWO(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class onReleaseKeyTWO(bpy.types.Operator):
+class onReleaseKeyTWO(Operator):
     """On Release"""
     bl_idname = "object.on_release_key_two"
     bl_label = "onReleaseKeyTWO"
@@ -95,7 +95,7 @@ class onReleaseKeyTWO(bpy.types.Operator):
 # ------------------------------------------------------------------------
 
 
-class onPressKeyTHREE(bpy.types.Operator):
+class onPressKeyTHREE(Operator):
     """Work Macro"""
     bl_idname = "object.on_press_key_three"
     bl_label = "onPressKeyTHREE"
@@ -108,7 +108,7 @@ class onPressKeyTHREE(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class onReleaseKeyTHREE(bpy.types.Operator):
+class onReleaseKeyTHREE(Operator):
     """On Release"""
     bl_idname = "object.on_release_key_three"
     bl_label = "onReleaseKeyTHREE"
@@ -124,7 +124,7 @@ class onReleaseKeyTHREE(bpy.types.Operator):
 # ------------------------------------------------------------------------
 
 
-class onPressKeyFOUR(bpy.types.Operator):
+class onPressKeyFOUR(Operator):
     """Work Macro"""
     bl_idname = "object.on_press_key_four"
     bl_label = "onPressKeyFOUR"
@@ -137,7 +137,7 @@ class onPressKeyFOUR(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class onReleaseKeyFOUR(bpy.types.Operator):
+class onReleaseKeyFOUR(Operator):
     """On Release"""
     bl_idname = "object.on_release_key_four"
     bl_label = "onReleaseKeyFOUR"
@@ -154,7 +154,7 @@ class onReleaseKeyFOUR(bpy.types.Operator):
 # ------------------------------------------------------------------------
 
 
-class onPressKeyFIVE(bpy.types.Operator):
+class onPressKeyFIVE(Operator):
     """Work Macro"""
     bl_idname = "object.on_press_key_five"
     bl_label = "onPressKeyFIVE"
@@ -167,7 +167,7 @@ class onPressKeyFIVE(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class onReleaseKeyFIVE(bpy.types.Operator):
+class onReleaseKeyFIVE(Operator):
     """On Release"""
     bl_idname = "object.on_release_key_five"
     bl_label = "onReleaseKeyFIVE"
@@ -184,7 +184,7 @@ class onReleaseKeyFIVE(bpy.types.Operator):
 # ------------------------------------------------------------------------
 
 
-class onPressKeySIX(bpy.types.Operator):
+class onPressKeySIX(Operator):
     """Work Macro"""
     bl_idname = "object.on_press_key_six"
     bl_label = "onPressKeySIX"
@@ -197,7 +197,7 @@ class onPressKeySIX(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class onReleaseKeySIX(bpy.types.Operator):
+class onReleaseKeySIX(Operator):
     """On Release"""
     bl_idname = "object.on_release_key_six"
     bl_label = "onReleaseKeySIX"
@@ -214,7 +214,7 @@ class onReleaseKeySIX(bpy.types.Operator):
 # ------------------------------------------------------------------------
 
 
-class onPressKeySEVEN(bpy.types.Operator):
+class onPressKeySEVEN(Operator):
     """Work Macro"""
     bl_idname = "object.on_press_key_seven"
     bl_label = "onPressKeySEVEN"
@@ -227,7 +227,7 @@ class onPressKeySEVEN(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class onReleaseKeySEVEN(bpy.types.Operator):
+class onReleaseKeySEVEN(Operator):
     """On Release"""
     bl_idname = "object.on_release_key_seven"
     bl_label = "onReleaseKeySEVEN"
@@ -244,7 +244,7 @@ class onReleaseKeySEVEN(bpy.types.Operator):
 # ------------------------------------------------------------------------
 
 
-class onPressKeyEIGHT(bpy.types.Operator):
+class onPressKeyEIGHT(Operator):
     """Work Macro"""
     bl_idname = "object.on_press_key_eight"
     bl_label = "onPressKeyEIGHT"
@@ -257,7 +257,7 @@ class onPressKeyEIGHT(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class onReleaseKeyEIGHT(bpy.types.Operator):
+class onReleaseKeyEIGHT(Operator):
     """On Release"""
     bl_idname = "object.on_release_key_eight"
     bl_label = "onReleaseKeyEIGHT"
@@ -274,7 +274,7 @@ class onReleaseKeyEIGHT(bpy.types.Operator):
 # ------------------------------------------------------------------------
 
 
-class onPressKeyNINE(bpy.types.Operator):
+class onPressKeyNINE(Operator):
     """Work Macro"""
     bl_idname = "object.on_press_key_nine"
     bl_label = "onPressKeyNINE"
@@ -287,7 +287,7 @@ class onPressKeyNINE(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class onReleaseKeyNINE(bpy.types.Operator):
+class onReleaseKeyNINE(Operator):
     """On Release"""
     bl_idname = "object.on_release_key_nine"
     bl_label = "onReleaseKeyNINE"
@@ -303,7 +303,7 @@ class onReleaseKeyNINE(bpy.types.Operator):
 # ------------------------------------------------------------------------
 
 
-class onPressKeyTEN(bpy.types.Operator):
+class onPressKeyTEN(Operator):
     """On Release"""
     bl_idname = "object.on_press_key_ten"
     bl_label = "onPressKeyTEN"
@@ -316,7 +316,7 @@ class onPressKeyTEN(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class onReleaseKeyTEN(bpy.types.Operator):
+class onReleaseKeyTEN(Operator):
     """On Release"""
     bl_idname = "object.on_release_key_ten"
     bl_label = "onReleaseKeyTEN"

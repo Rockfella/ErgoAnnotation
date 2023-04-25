@@ -3,7 +3,6 @@ import bpy
 from bpy.types import Panel
 
 
-
 class EA_PT_Panel(Panel):
     bl_label = "MasterClock"
     bl_idname = "SEQUENCER_PT_my_addon_panel2"
