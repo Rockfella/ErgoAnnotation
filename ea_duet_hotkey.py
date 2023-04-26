@@ -3,6 +3,7 @@ import bpy
 import time
 import datetime
 from bpy.types import Operator
+from .ea_constants import Constants
 # ------------------------------------------------------------------------
 #    HOTKEY: ZERO
 # ------------------------------------------------------------------------
@@ -364,10 +365,20 @@ def executeThePressFromKey(self, context, key):
     else:
         choosen_color = color_array[3]  # green
 
-    curren_input = "DUET"
+    curren_input = bpy.data.scenes[bpy.context.scene.name].active_input
+    current_input_str = ""
+    current_input_channel = -1
+    if curren_input == Constants.DUET_LEFT[0]:
+        current_input_str = "DUET LEFT"
+        current_input_channel = Constants.DUET_LEFT[1]
+    elif curren_input == Constants.DUET_RIGHT[0]:
+        current_input_str = "DUET RIGHT"
+        current_input_channel = Constants.DUET_RIGHT[1]
+
+
     time_now = datetime.datetime.now()
     formatted_date_time = time_now.strftime("%Y-%m-%d %H:%M:%S")
-    sequence_name = curren_input + ", " + \
+    sequence_name = current_input_str + ", " + \
         str(num_sequence_id) + ", " + formatted_date_time
 
     current_frame = bpy.context.scene.frame_current
@@ -378,9 +389,9 @@ def executeThePressFromKey(self, context, key):
         type='TEXT',
         frame_start=current_frame,
         frame_end=current_frame + 5,
-        channel=3
+        channel=current_input_channel
     )
-    text_strip.text = 'DUET OMNI-RES ' + str(key)
+    text_strip.text = current_input_str + ' OMNI-RES ' + str(key)
     # Set the font and size for the text strip
     text_strip.font_size = 50.0
     text_strip.color = (0.35, 0.82, 0.51, 1.0)
@@ -388,7 +399,7 @@ def executeThePressFromKey(self, context, key):
     text_strip.use_bold = True
     # Set the position and alignment of the text strip
     # Set the position of the text strip
-    text_strip.location = (0.15, 0.18)
+    text_strip.location = (0.20, 0.18)
     text_strip.use_shadow = True
     text_strip.use_box = True
     text_strip.shadow_color = (0, 0, 0, 0)  # Set the shadow color

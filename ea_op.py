@@ -1,7 +1,8 @@
 import bpy
 
 from bpy.types import Operator
-
+from .ea_inputswitch import inputSwitchClass
+from .ea_constants import Constants
 
 class EA_OT_Master_Clock_Button(Operator):
     bl_idname = "myaddon.master_button_operator"
@@ -37,6 +38,36 @@ class EA_OT_Round_FPS_Button(Operator):
         return {'FINISHED'}
 
 
+class EA_OT_DUET_R_Button(Operator):
+    bl_idname = "myaddon.duet_r_button_operator"
+    bl_label = "DUET RIGHT"
+    bl_description = "DUET for the right hand"
+
+    def execute(self, context):
+        # button_function(self, context)
+        # TODO: SET THE ACTIVE CHANNEL, MAKE THE BUTTON "SELECTED" and call the right hotkeys
+        print("DUET RIGHT SET")
+        inputSwitchClass.input_switch(self, Constants.DUET_RIGHT[0])
+        return {'FINISHED'}
+   
+class EA_OT_DUET_L_Button(Operator):
+    bl_idname = "myaddon.duet_l_button_operator"
+    bl_label = "DUET LEFT"
+    bl_description = "DUET for the left hand"
+
+    def execute(self, context):
+        # button_function(self, context)
+        #TODO: SET THE ACTIVE CHANNEL, MAKE THE BUTTON "SELECTED" and call the right hotkeys
+
+        inputSwitchClass.input_switch(self, Constants.DUET_LEFT[0])
+        
+
+        return {'FINISHED'}
+    
+
+
+
+
 def check_string_format(string):
     # Split the string by colon ":"
     parts = string.split(":")
@@ -51,6 +82,11 @@ def check_string_format(string):
             return False
 
     return True
+
+
+
+
+
 
 
 # ------------------------------------------------------------------------
@@ -217,3 +253,4 @@ def setWaterMasterTime(self, context):
 # ------------------------------------------------------------------------
 #    MASTER CLOCK OPERATORS ////////////////////////////////////////////// END
 # ------------------------------------------------------------------------
+
