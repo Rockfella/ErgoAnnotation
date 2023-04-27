@@ -346,40 +346,43 @@ def executeThePressFromKey(self, context, key):
     # Next id
     num_sequence_id = num_sequences + 1
 
-    # ColorTag for num hotkeys
-    int_key = int(key)
-    color_array = ["COLOR_01", "COLOR_02", "COLOR_03", "COLOR_04", "COLOR_06"]
-    choosen_color = color_array[0]
+    
+    
+    choosen_tag_color = "COLOR_04"
 
-    if 0 <= int_key <= 2:
-        choosen_color = color_array[3]  # green
-    elif 3 <= int_key <= 4:
-        choosen_color = color_array[2]  # yellow
-    elif 5 <= int_key <= 6:
-        choosen_color = color_array[1]  # orange
-    elif 7 <= int_key <= 8:
-        choosen_color = color_array[0]  # red
-    elif 9 <= int_key <= 10:
-        choosen_color = color_array[4]  # purple
-
-    else:
-        choosen_color = color_array[3]  # green
+    
 
     curren_input = bpy.data.scenes[bpy.context.scene.name].active_input
     current_input_str = ""
+    text_strip_visual_text = ""
+    text_strip_visual_location = (0,0)
+    text_strip_visual_color = (0.35, 0.82, 0.51, 1.0) #default
+
     current_input_channel = -1
     if curren_input == Constants.DUET_LEFT[0]:
-        current_input_str = "DUET LEFT"
+        current_input_str = Constants.DUET_LEFT[2]
         current_input_channel = Constants.DUET_LEFT[1]
+        text_strip_visual_text = current_input_str + " OMNI-RES:" + str(key)
+        text_strip_visual_location = (0.20, 0.18)
+        choosen_tag_color = pickTagColorForDuet(key)
+        text_strip_visual_color = pickVisualTextColorForDuet(key)
+        
+
     elif curren_input == Constants.DUET_RIGHT[0]:
-        current_input_str = "DUET RIGHT"
+        current_input_str = Constants.DUET_RIGHT[2] 
         current_input_channel = Constants.DUET_RIGHT[1]
+        text_strip_visual_text = current_input_str + " OMNI-RES:" + str(key)
+        text_strip_visual_location = (0.20, 0.25)
+        choosen_tag_color = pickTagColorForDuet(key)
+        text_strip_visual_color = pickVisualTextColorForDuet(key)
+
+    #elif:
+        #Posture etc
 
 
     time_now = datetime.datetime.now()
     formatted_date_time = time_now.strftime("%Y-%m-%d %H:%M:%S")
-    sequence_name = current_input_str + ", " + \
-        str(num_sequence_id) + ", " + formatted_date_time
+    sequence_name = current_input_str + ", " + key + ", " + str(num_sequence_id) + ", " + formatted_date_time
 
     current_frame = bpy.context.scene.frame_current
     image_str = sequence_name
@@ -391,22 +394,22 @@ def executeThePressFromKey(self, context, key):
         frame_end=current_frame + 5,
         channel=current_input_channel
     )
-    text_strip.text = current_input_str + ' OMNI-RES ' + str(key)
+    text_strip.text = text_strip_visual_text
     # Set the font and size for the text strip
     text_strip.font_size = 50.0
-    text_strip.color = (0.35, 0.82, 0.51, 1.0)
+    text_strip.color = text_strip_visual_color
 
     text_strip.use_bold = True
     # Set the position and alignment of the text strip
     # Set the position of the text strip
-    text_strip.location = (0.20, 0.18)
+    text_strip.location = text_strip_visual_location
     text_strip.use_shadow = True
     text_strip.use_box = True
     text_strip.shadow_color = (0, 0, 0, 0)  # Set the shadow color
     # text_strip.wrap_width = 300  # Set the wrap width of the text strip
     text_strip.align_x = 'CENTER'  # Set the horizontal alignment
     text_strip.align_y = 'CENTER'  # Set the vertical alignment
-    text_strip.color_tag = choosen_color
+    text_strip.color_tag = choosen_tag_color
 
     current_frame = bpy.context.scene.frame_current
 
@@ -415,6 +418,52 @@ def executeThePressFromKey(self, context, key):
 
     # Initiate the drag of the sequence just created
     bpy.app.handlers.frame_change_post.append(auto_drag_strip)
+
+
+def pickTagColorForDuet(key):
+
+    # ColorTag for num hotkeys
+    int_key = int(key)
+
+    color_array = ["COLOR_01", "COLOR_02", "COLOR_03", "COLOR_04", "COLOR_06"]
+
+    if 0 <= int_key <= 2:
+        return color_array[3]  # green
+    elif 3 <= int_key <= 4:
+        return color_array[2]  # yellow
+    elif 5 <= int_key <= 6:
+        return color_array[1]  # orange
+    elif 7 <= int_key <= 8:
+        return color_array[0]  # red
+    elif 9 <= int_key <= 10:
+        return color_array[4]  # purple
+
+    else:
+        return color_array[3]  # green
+
+
+def pickVisualTextColorForDuet(key):
+
+    # ColorTag for num hotkeys
+    int_key = int(key)
+
+    color_array = ["COLOR_01", "COLOR_02", "COLOR_03", "COLOR_04", "COLOR_06"]
+
+    if 0 <= int_key <= 2:
+        return (0.48, 0.80, 0.48, 1.00)  # green
+    elif 3 <= int_key <= 4:
+        return (0.95, 0.86, 0.33, 1.00)  # yellow
+    elif 5 <= int_key <= 6:
+        return (0.95, 0.64, 0.33, 1.00)  # orange
+    elif 7 <= int_key <= 8:
+        return (0.89, 0.38, 0.36, 1.00)  # red
+    elif 9 <= int_key <= 10:
+        return (0.55, 0.35, 0.85, 1.00)  # purple
+
+    else:
+        return (0.48, 0.80, 0.48, 1.00)  # green
+
+
 
 
 def executeTheReleaseFromKey(self, context, key):

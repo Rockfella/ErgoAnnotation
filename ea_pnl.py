@@ -33,14 +33,28 @@ class EA_PT_Panel_Inputs(Panel):
         # First row
         row = layout.row(align=True)
         col = row.column_flow(columns=2)
-        col.operator("myaddon.duet_l_button_operator")
-        col.operator("myaddon.duet_r_button_operator")
+        #col.operator("myaddon.duet_l_button_operator")
+
+        # duet_left_operator_toggle
+        wm = context.window_manager
+        duet_left_label = "DUET LEFT" if wm.duet_left_operator_toggle else "DUET LEFT"
+        col.prop(wm, 'duet_left_operator_toggle',
+                 text=duet_left_label, toggle=True)
+        # duet_right_operator_toggle
+        duet_right_label = "DUET RIGHT" if wm.duet_left_operator_toggle else "DUET RIGHT"
+        col.prop(wm, 'duet_right_operator_toggle',
+                 text=duet_right_label, toggle=True)
+
+        #col.operator("myaddon.duet_r_button_operator")
 
         # Second row
+
+       
         row = layout.row(align=True)
         col = row.column_flow(columns=2)
         col.operator("myaddon.round_fps_button_operator")
-        col.operator("myaddon.round_fps_button_operator")
+        
+        
 
 
 

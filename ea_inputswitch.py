@@ -141,8 +141,7 @@ class inputSwitchClass:
             # HOTKEY UNREG
             unreg_executions_index = 0
             for i in addon_keymaps_active_operations:
-                print("WHAT AM I DEALING WITH HERE:")
-                print(addon_keymaps_active_operations)
+                
                 bpy.utils.unregister_class(
                     addon_keymaps_active_operations[unreg_executions_index])
 
@@ -242,4 +241,23 @@ class inputSwitchClass:
         elif value == "3":  # --------------------------------------------------- other
             print("Value is 3")
         else:
-            print("Value is not 1, 2, or 3")
+            print("Remove all hotkeys")
+
+            # HOTKEY UNREG
+            unreg_executions_index = 0
+            for i in addon_keymaps_active_operations:
+               
+                bpy.utils.unregister_class(
+                    addon_keymaps_active_operations[unreg_executions_index])
+
+                # bpy.utils.unregister_class(
+                #    addon_keymaps_active_operations[unreg_executions_index])
+
+                unreg_executions_index += 1
+            # clear the active operations
+            addon_keymaps_active_operations.clear()
+
+            # handle the keymap
+            for km, kmi in addon_keymaps_active:
+                km.keymap_items.remove(kmi)
+            addon_keymaps_active.clear()
