@@ -110,6 +110,7 @@ class EA_OT_Export_Data_Button(Operator):
         # button_function(self, context)
         
         print("EXPORT")
+        bpy.ops.export_test.some_data('INVOKE_DEFAULT')
 
         return {'FINISHED'}
 
@@ -156,8 +157,8 @@ def frame_from_smpte(smpte_timecode: str, fps=None, fps_base=None) -> int:
     seconds = int(timecode_parts[2])
     frames = int(timecode_parts[3])
 
-    print("FPS_REAL")
-    print(fps_real)
+    #print("FPS_REAL")
+    #print(fps_real)
 
     hours_seconds_frames = ((hours * 60) * 60) * fps_real
     minutes_seconds_frames = (minutes * 60) * fps_real
@@ -168,8 +169,8 @@ def frame_from_smpte(smpte_timecode: str, fps=None, fps_base=None) -> int:
     total_frames = (hours_seconds_frames +
                     minutes_seconds_frames + seconds_frames + frames)
 
-    print(hours_seconds_frames, minutes_seconds_frames,
-          seconds_frames, frames_frames)
+    #print(hours_seconds_frames, minutes_seconds_frames,
+    #      seconds_frames, frames_frames)
     return total_frames
 
 
@@ -239,9 +240,9 @@ def setWaterMasterTime(self, context):
     text_strip = bpy.data.scenes[bpy.context.scene.name].sequence_editor.sequences.new_effect(
         name="@master.time",
         type='TEXT',
-        frame_start=scene.frame_start + calc_master_frame,
+        frame_start=scene.frame_start,
         frame_end=scene.frame_end,
-        channel=2
+        channel=3
     )
     text_strip.text = ''
     # Set the font and size for the text strip

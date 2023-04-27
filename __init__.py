@@ -41,11 +41,12 @@ from . ea_op import EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUE
 
 from . ea_pnl import EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export
 
+from . ea_export_data import ExportSomeData
 
 
 
 #Regular classes
-classes = (EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_Export_Data_Button, EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export)
+classes = (EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_Export_Data_Button, EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export, ExportSomeData)
 def register():
 
     bpy.types.Scene.master_time = bpy.props.StringProperty(name="master_time")
@@ -64,6 +65,8 @@ def register():
         default=False,
         update=update_function_duet_right_operator_toggle)
 
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
+
     for c in classes:
         
         bpy.utils.register_class(c)
@@ -77,6 +80,8 @@ def unregister():
     del bpy.types.WindowManager.duet_left_operator_toggle
     del bpy.types.WindowManager.duet_right_operator_toggle
     
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
+
     for c in classes:
        
         bpy.utils.unregister_class(c)
@@ -96,3 +101,8 @@ def update_function_duet_right_operator_toggle(self, context):
 
         first.duet_right_operator_toggle('INVOKE_DEFAULT')
     return
+
+
+# Only needed if you want to add into a dynamic menu
+def menu_func_export(self, context):
+    self.layout.operator(ExportSomeData.bl_idname, text="Text Export Operator")

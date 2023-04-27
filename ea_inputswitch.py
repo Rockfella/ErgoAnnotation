@@ -125,11 +125,11 @@ class inputSwitchClass:
             #    EXTRA UI
             # ------------------------------------------------------------------------
             # Change the channel name, but only if it hasnt been done
-            if 'Channel 3' in bpy.context.scene.sequence_editor.channels:
+            if 'Channel 4' in bpy.context.scene.sequence_editor.channels:
                 # Get the sequence editor
                 seq_editor = bpy.context.scene.sequence_editor
                 # Get the channel to rename and lock
-                channel_to_rename = seq_editor.channels['Channel 3']
+                channel_to_rename = seq_editor.channels['Channel 4']
                 #Rename the channel
                 channel_to_rename.name = 'DUET Left'
 
@@ -222,11 +222,11 @@ class inputSwitchClass:
             #    EXTRA UI
             # ------------------------------------------------------------------------
             #Change the channel name, but only if it hasnt been done
-            if 'Channel 4' in bpy.context.scene.sequence_editor.channels:
+            if 'Channel 5' in bpy.context.scene.sequence_editor.channels:
                 # Get the sequence editor
                 seq_editor = bpy.context.scene.sequence_editor
                 # Get the channel to rename and lock
-                channel_to_rename = seq_editor.channels['Channel 4']
+                channel_to_rename = seq_editor.channels['Channel 5']
                 # Rename the channel
                 channel_to_rename.name = 'DUET Right'
 
