@@ -485,7 +485,7 @@ def auto_drag_strip(scene, depsgraph):
     num_sequences = len(sequence_editor.sequences)
     active_strip = sequence_editor.sequences[num_sequences - 1]
 
-    actual_end = current_frame - active_strip.frame_start
+    actual_end = (current_frame - active_strip.frame_start + 1) #adding one will make the current input visiable
     active_strip.frame_final_duration = int(actual_end)
 
 

@@ -101,6 +101,17 @@ class EA_OT_DUET_R_Button(Operator):
         return {'RUNNING_MODAL'}
 
 
+class EA_OT_Export_Data_Button(Operator):
+    bl_idname = "myaddon.export_data_operator"
+    bl_label = "Export Data"
+    bl_description = "Export Data to CSV"
+
+    def execute(self, context):
+        # button_function(self, context)
+        
+        print("EXPORT")
+
+        return {'FINISHED'}
 
 
 

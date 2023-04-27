@@ -52,9 +52,21 @@ class EA_PT_Panel_Inputs(Panel):
        
         row = layout.row(align=True)
         col = row.column_flow(columns=2)
-        col.operator("myaddon.round_fps_button_operator")
+        #col.operator("myaddon.round_fps_button_operator")
         
         
+class EA_PT_Panel_Export(Panel):
+    bl_label = "Export"
+    bl_idname = "SEQUENCER_PT_my_addon_panel3"
+    bl_space_type = 'SEQUENCE_EDITOR'
+    bl_region_type = 'UI'
+    bl_category = 'ERGONOMICS'
 
+    def draw(self, context):
+        layout = self.layout
+
+        # Add a button with a callback to the button_function
+        layout.operator("myaddon.export_data_operator")
+        
 
 
