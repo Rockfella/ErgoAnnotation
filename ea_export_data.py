@@ -29,13 +29,15 @@ def write_some_data(context, filepath, use_some_setting):
         # Set the current frame to the frame in the loop
         scene.frame_set(frame)
         # Print the frame number
-
+        is_in_range_data_DUET_L = False
+        is_in_range_data_DUET_R = False
         for strip in scene.sequence_editor.sequences:
             if strip.type == 'TEXT':
-                filter_name = strip.name.split(',')
+               
                 if strip.name == '@master.time':
                     data_master_clock.append(strip.text)
 
+                filter_name = strip.name.split(',')
                 strip_range_start = strip.frame_final_start
                 strip_range_end = (strip_range_start + strip.frame_final_duration) - 1 # -1 to make sure it does not include the end frame
 
@@ -43,14 +45,23 @@ def write_some_data(context, filepath, use_some_setting):
 
                     if filter_name[0] == Constants.DUET_LEFT[2]:
                         data_DUET_L.append(filter_name[1])
-                else:
-                    data_DUET_L.append(-1)
+                        is_in_range_data_DUET_L = True
+
+                    elif filter_name[0] == Constants.DUET_RIGHT[2]:
+                        data_DUET_R.append(filter_name[1])
+                        is_in_range_data_DUET_R = True
+
+        if is_in_range_data_DUET_L == False:
+            data_DUET_L.append(-1)
+        if is_in_range_data_DUET_R == False:
+            data_DUET_R.append(-1)
                     
 
     index = 0   
     for d in data_master_clock:
         
-        data.append([data_master_clock[index], data_DUET_L[index], 0])
+        data.append([data_master_clock[index],
+                    data_DUET_L[index], data_DUET_R[index]])
 
         index += 1
         # print("Frame number:", frame)
