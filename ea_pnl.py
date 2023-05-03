@@ -52,7 +52,9 @@ class EA_PT_Panel_Inputs(Panel):
        
         row = layout.row(align=True)
         col = row.column_flow(columns=2)
-        #col.operator("myaddon.round_fps_button_operator")
+        free_channel_label = "FREE CHANNEL" if wm.duet_left_operator_toggle else "FREE CHANNEL"
+        col.prop(wm, 'free_channel_operator_toggle',
+                 text=free_channel_label, toggle=True)
         
         
 class EA_PT_Panel_Export(Panel):

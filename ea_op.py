@@ -1,6 +1,7 @@
 import bpy
 
 from bpy.types import Operator
+from bpy.app.handlers import persistent
 from .ea_inputswitch import inputSwitchClass
 from .ea_constants import Constants
 
@@ -60,6 +61,7 @@ class EA_OT_DUET_L_Button(Operator):
 
         #turn off the other buttons
         context.window_manager.duet_right_operator_toggle = False
+        context.window_manager.free_channel_operator_toggle = False
 
         self._timer = context.window_manager.event_timer_add(
             time_step = 0.05, window = context.window)
@@ -91,12 +93,45 @@ class EA_OT_DUET_R_Button(Operator):
     def invoke(self, context, event):
         # turn off the other buttons
         context.window_manager.duet_left_operator_toggle = False
+        context.window_manager.free_channel_operator_toggle = False
 
         self._timer = context.window_manager.event_timer_add(
             time_step=0.05, window=context.window)
 
         print("Start")
         inputSwitchClass.input_switch(self, Constants.DUET_RIGHT[0])
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
+
+
+class EA_OT_FREE_CHANNEL_Button(Operator):
+    bl_idname = "myaddon.free_channel_operator_toggle"
+    bl_label = "My Operator"
+
+    def modal(self, context, event):
+
+        if not context.window_manager.free_channel_operator_toggle:
+            context.window_manager.event_timer_remove(self._timer)
+            print("Stopped")
+
+            # Stop the input for this one, but only in case the user press the same button again to turn off and has not pressed another button
+            # if it remains the same as before, it means the button has been turned off from itself
+            if bpy.data.scenes[bpy.context.scene.name].active_input == Constants.FREE_CHANNEL[0]:
+                inputSwitchClass.input_switch(self, -2)
+
+            return {'FINISHED'}
+        return {'PASS_THROUGH'}
+
+    def invoke(self, context, event):
+        # turn off the other buttons
+        context.window_manager.duet_left_operator_toggle = False
+        context.window_manager.duet_right_operator_toggle = False
+
+        self._timer = context.window_manager.event_timer_add(
+            time_step=0.05, window=context.window)
+
+        print("Start")
+        inputSwitchClass.input_switch(self, Constants.FREE_CHANNEL[0])
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
@@ -142,36 +177,7 @@ def check_string_format(string):
 # ------------------------------------------------------------------------
 
 
-def frame_from_smpte(smpte_timecode: str, fps=None, fps_base=None) -> int:
 
-    if fps == None or fps_base == None:
-        # Use current scene fps if fps and fps_base are not provided
-        fps = bpy.context.scene.render.fps
-        fps_base = bpy.context.scene.render.fps_base
-        fps_real = fps / fps_base
-
-    # Split the timecode into its components
-    timecode_parts = smpte_timecode.split(':')
-    hours = int(timecode_parts[0])
-    minutes = int(timecode_parts[1])
-    seconds = int(timecode_parts[2])
-    frames = int(timecode_parts[3])
-
-    #print("FPS_REAL")
-    #print(fps_real)
-
-    hours_seconds_frames = ((hours * 60) * 60) * fps_real
-    minutes_seconds_frames = (minutes * 60) * fps_real
-    seconds_frames = seconds * fps_real
-    frames_frames = frames
-
-    # Calculate the total number of frames
-    total_frames = (hours_seconds_frames +
-                    minutes_seconds_frames + seconds_frames + frames)
-
-    #print(hours_seconds_frames, minutes_seconds_frames,
-    #      seconds_frames, frames_frames)
-    return total_frames
 
 
 def setNewMasterClock(self, context):
@@ -257,45 +263,13 @@ def setWaterMasterTime(self, context):
     text_strip.align_y = 'CENTER'  # Set the vertical alignment
 
     
-
-    def meta_text_handler(scene, depsgraph):
-
-        # Projected frames from master clock
-        calc_master_frame = bpy.data.scenes[bpy.context.scene.name].master_time_frame
-        calc_master_time = bpy.data.scenes[bpy.context.scene.name].master_time
-
-        frames_from_master_clock = frame_from_smpte(calc_master_time)
-
-        for strip in scene.sequence_editor.sequences_all:
-            if strip.type == 'TEXT':
-
-                if strip.name == '@master.time':
-
-                    fps = bpy.context.scene.render.fps
-                    fps_base = bpy.context.scene.render.fps_base
-                    fps_real = fps / fps_base
-
-                    # Input SMPTE formatted string
-                    smpte_string_current = bpy.utils.smpte_from_frame(
-                        (scene.frame_current + frames_from_master_clock - calc_master_frame), fps=fps, fps_base=fps_base)
-
-                    # Split the string using ":" as the delimiter
-                    hours_curr, minutes_curr, seconds_curr, frames_curr = smpte_string_current.split(
-                        ":")
-
-                    strip.text = str(hours_curr) + ':' + str(minutes_curr) + \
-                        ':' + str(seconds_curr) + '+' + str(frames_curr)
+    
+   
 
 
-    #TODO: move these to the init file
-    # def registe
-    bpy.app.handlers.frame_change_pre.clear()
-    bpy.app.handlers.frame_change_pre.append(meta_text_handler)
-    bpy.app.handlers.render_pre.append(meta_text_handler)
+    
 
-    def unregister():
-        bpy.app.handlers.frame_change_pre.remove(meta_text_handler)
-        bpy.app.handlers.render_pre.remove(meta_text_handler)
+
 
 
 # ------------------------------------------------------------------------

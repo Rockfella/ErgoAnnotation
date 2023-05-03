@@ -4,6 +4,8 @@ import time
 import datetime
 from bpy.types import Operator
 from .ea_constants import Constants
+from .ea_constants import pickTagColorForDuet, pickVisualTextColorForDuet
+
 # ------------------------------------------------------------------------
 #    HOTKEY: ZERO
 # ------------------------------------------------------------------------
@@ -376,16 +378,33 @@ def executeThePressFromKey(self, context, key):
         choosen_tag_color = pickTagColorForDuet(key)
         text_strip_visual_color = pickVisualTextColorForDuet(key)
 
-    #elif:
-        #Posture etc
+    elif curren_input == Constants.FREE_CHANNEL[0]:
+        current_input_str = Constants.FREE_CHANNEL[2]
+        current_input_channel = Constants.FREE_CHANNEL[1]
+        text_strip_visual_text = current_input_str + ", " + "EMPTY"
+        text_strip_visual_location = (0.18, 0.32)
+        choosen_tag_color = "COLOR_04"
+        text_strip_visual_color = (0.48, 0.80, 0.48, 1.00)
 
 
     time_now = datetime.datetime.now()
     formatted_date_time = time_now.strftime("%Y-%m-%d %H:%M:%S")
-    sequence_name = current_input_str + ", " + key + ", " + str(num_sequence_id) + ", " + formatted_date_time
+    sequence_name_duet = current_input_str + ", " + key + ", " + str(num_sequence_id) + ", " + formatted_date_time
+    sequence_name_free_channel = current_input_str + ", " + "EMPTY" + \
+        ", " + str(num_sequence_id) + ", " + formatted_date_time
 
     current_frame = bpy.context.scene.frame_current
-    image_str = sequence_name
+    
+
+    #In case DUET is active we can direclty use the hotkey as str, otherwise use other
+    image_str = ""
+    if curren_input == Constants.DUET_LEFT[0]:
+        image_str = sequence_name_duet
+
+    elif curren_input == Constants.DUET_RIGHT[0]:
+        image_str = sequence_name_duet
+    elif curren_input == Constants.FREE_CHANNEL[0]:
+        image_str = sequence_name_free_channel
 
     text_strip = bpy.data.scenes[bpy.context.scene.name].sequence_editor.sequences.new_effect(
         name=image_str,
@@ -394,6 +413,8 @@ def executeThePressFromKey(self, context, key):
         frame_end=current_frame + 5,
         channel=current_input_channel
     )
+
+
     text_strip.text = text_strip_visual_text
     # Set the font and size for the text strip
     text_strip.font_size = 50.0
@@ -418,50 +439,6 @@ def executeThePressFromKey(self, context, key):
 
     # Initiate the drag of the sequence just created
     bpy.app.handlers.frame_change_post.append(auto_drag_strip)
-
-
-def pickTagColorForDuet(key):
-
-    # ColorTag for num hotkeys
-    int_key = int(key)
-
-    color_array = ["COLOR_01", "COLOR_02", "COLOR_03", "COLOR_04", "COLOR_06"]
-
-    if 0 <= int_key <= 2:
-        return color_array[3]  # green
-    elif 3 <= int_key <= 4:
-        return color_array[2]  # yellow
-    elif 5 <= int_key <= 6:
-        return color_array[1]  # orange
-    elif 7 <= int_key <= 8:
-        return color_array[0]  # red
-    elif 9 <= int_key <= 10:
-        return color_array[4]  # purple
-
-    else:
-        return color_array[3]  # green
-
-
-def pickVisualTextColorForDuet(key):
-
-    # ColorTag for num hotkeys
-    int_key = int(key)
-
-    color_array = ["COLOR_01", "COLOR_02", "COLOR_03", "COLOR_04", "COLOR_06"]
-
-    if 0 <= int_key <= 2:
-        return (0.48, 0.80, 0.48, 1.00)  # green
-    elif 3 <= int_key <= 4:
-        return (0.95, 0.86, 0.33, 1.00)  # yellow
-    elif 5 <= int_key <= 6:
-        return (0.95, 0.64, 0.33, 1.00)  # orange
-    elif 7 <= int_key <= 8:
-        return (0.89, 0.38, 0.36, 1.00)  # red
-    elif 9 <= int_key <= 10:
-        return (0.55, 0.35, 0.85, 1.00)  # purple
-
-    else:
-        return (0.48, 0.80, 0.48, 1.00)  # green
 
 
 
@@ -489,100 +466,3 @@ def auto_drag_strip(scene, depsgraph):
     active_strip.frame_final_duration = int(actual_end)
 
 
-# ------------------------------------------------------------------------
-#    HANDLE HOTKEYS
-# ------------------------------------------------------------------------
-# store keymaps here to access after registration
-addon_keymaps = []
-
-
-duet_hotkey_press_executions = [onPressKeyZERO, onPressKeyONE, onPressKeyTWO, onPressKeyTHREE, onPressKeyFOUR,
-                                onPressKeyFIVE, onPressKeySIX, onPressKeySEVEN, onPressKeyEIGHT, onPressKeyNINE, onPressKeyTEN]
-
-duet_hotkey_release_executions = [onReleaseKeyZERO, onReleaseKeyONE, onReleaseKeyTWO, onReleaseKeyTHREE, onReleaseKeyFOUR,
-                                  onReleaseKeyFIVE, onReleaseKeySIX, onReleaseKeySEVEN, onReleaseKeyEIGHT, onReleaseKeyNINE, onReleaseKeyTEN]
-
-
-duet_hotkeys = ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR',
-                'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN']
-
-
-def register():
-
-    # handle the keymap
-    wm = bpy.context.window_manager
-    km = wm.keyconfigs.addon.keymaps.new(
-        name='SequencerCommon', space_type='SEQUENCE_EDITOR')
-
-    press_executions_index = 0
-    for key in duet_hotkeys:
-        print(press_executions_index)
-        bpy.utils.register_class(
-            duet_hotkey_press_executions[press_executions_index])
-
-        # To reach the full scale of OMNI-RES 0-10, ctrl + 1 = 10
-        if key == 'TEN':
-            kmi = km.keymap_items.new(
-                duet_hotkey_press_executions[press_executions_index].bl_idname, 'ONE', 'PRESS', ctrl=True, shift=False)
-
-            addon_keymaps.append(km)
-        else:
-
-            kmi = km.keymap_items.new(
-                duet_hotkey_press_executions[press_executions_index].bl_idname, key, 'PRESS', ctrl=False, shift=False)
-
-            addon_keymaps.append(km)
-
-        press_executions_index += 1
-
-    # handle the keymap
-
-    # km_2 = wm.keyconfigs.addon.keymaps.new(name='SequencerCommon', space_type='SEQUENCE_EDITOR')
-    release_executions_index = 0
-    for key in duet_hotkeys:
-        print(release_executions_index)
-
-        bpy.utils.register_class(
-            duet_hotkey_release_executions[release_executions_index])
-        # To reach the full scale of OMNI-RES 0-10, ctrl + 1 = 10
-        if key == 'TEN':
-            kmi_2 = km.keymap_items.new(
-                duet_hotkey_release_executions[release_executions_index].bl_idname, 'ONE', 'RELEASE', ctrl=True, shift=False)
-            addon_keymaps.append(km)
-        else:
-            kmi_2 = km.keymap_items.new(
-                duet_hotkey_release_executions[release_executions_index].bl_idname, key, 'RELEASE', ctrl=False, shift=False)
-            addon_keymaps.append(km)
-
-        release_executions_index += 1
-
-    # kmi_2 = km.keymap_items.new(
-    #    OnRelease.bl_idname, 'ZERO', 'RELEASE', ctrl=False, shift=False)
-   # addon_keymaps.append(km_2)
-
-
-def unregister():
-
-    unreg_executions_index = 0
-    for key in duet_hotkeys:
-
-        bpy.utils.unregister_class(
-            duet_hotkey_press_executions[unreg_executions_index])
-
-        bpy.utils.unregister_class(
-            duet_hotkey_release_executions[unreg_executions_index])
-
-        unreg_executions_index = + 1
-
-    # bpy.utils.unregister_class(onPressKeyONE)
-
-    # handle the keymap
-    wm = bpy.context.window_manager
-    for km in addon_keymaps:
-        wm.keyconfigs.addon.keymaps.remove(km)
-    # clear the list
-    del addon_keymaps[:]
-
-
-if __name__ == "__main__":
-    register()

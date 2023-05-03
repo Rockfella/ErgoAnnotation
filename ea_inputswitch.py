@@ -3,6 +3,10 @@ import bpy
 
 from .ea_duet_hotkey import onPressKeyZERO, onPressKeyONE, onPressKeyTWO, onPressKeyTHREE, onPressKeyFOUR, onPressKeyFIVE, onPressKeySIX, onPressKeySEVEN, onPressKeyEIGHT, onPressKeyNINE, onPressKeyTEN
 from .ea_duet_hotkey import onReleaseKeyZERO, onReleaseKeyONE, onReleaseKeyTWO, onReleaseKeyTHREE, onReleaseKeyFOUR, onReleaseKeyFIVE, onReleaseKeySIX, onReleaseKeySEVEN, onReleaseKeyEIGHT, onReleaseKeyNINE, onReleaseKeyTEN
+from .ea_free_channel_hotkeys import onPressKeyFreeChannelF
+from .ea_free_channel_hotkeys import onReleaseKeyFreeChannelF
+
+
 from .ea_constants import Constants
 
 # TODO: register all that are inside this file in the right place
@@ -18,8 +22,17 @@ duet_hotkey_release_executions = (onReleaseKeyZERO, onReleaseKeyONE, onReleaseKe
 duet_hotkeys = ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR',
                 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN']
 
+free_channel_press_executions = [onPressKeyFreeChannelF]
+free_channel_release_executions = [onReleaseKeyFreeChannelF]
+
+free_channel_hotkeys = ['F']
+
+
+
 #store which operations that have been registered for un-reg in the switch
 addon_keymaps_active_operations = []
+
+
 
 
 
@@ -230,6 +243,89 @@ class inputSwitchClass:
                 # Rename the channel
                 channel_to_rename.name = 'DUET Right'
 
+
+
+
+
+        elif value == Constants.FREE_CHANNEL[0]:  # --------------------------------------------------- Constants.FREE_CHANNEL[0]:
+            
+            # set active input
+            bpy.data.scenes[bpy.context.scene.name].active_input = Constants.FREE_CHANNEL[0]
+
+            # HOTKEY UNREG
+            unreg_executions_index = 0
+            for i in addon_keymaps_active_operations:
+                
+                bpy.utils.unregister_class(
+                    addon_keymaps_active_operations[unreg_executions_index])
+
+                #bpy.utils.unregister_class(
+                #    addon_keymaps_active_operations[unreg_executions_index])
+
+                unreg_executions_index += 1
+            # clear the active operations
+            addon_keymaps_active_operations.clear()
+
+            # handle the keymap
+            for km, kmi in addon_keymaps_active:
+                km.keymap_items.remove(kmi)
+            addon_keymaps_active.clear()
+
+
+            # HOTKEY REGISTER
+
+            # handle the keymap
+            wm = bpy.context.window_manager
+            km = wm.keyconfigs.addon.keymaps.new(
+                name='SequencerCommon', space_type='SEQUENCE_EDITOR')
+
+            press_executions_index = 0
+            for key in free_channel_hotkeys:
+
+                bpy.utils.register_class(
+                    free_channel_press_executions[press_executions_index])
+                # store the operations for later un-reg
+                addon_keymaps_active_operations.append(
+                    free_channel_press_executions[press_executions_index])
+
+                
+                kmi = km.keymap_items.new(
+                    free_channel_press_executions[press_executions_index].bl_idname, key, 'PRESS', ctrl=False, shift=False)
+
+                addon_keymaps_active.append((km, kmi))
+
+                press_executions_index += 1
+
+            # handle the keymap
+
+            release_executions_index = 0
+            for key in free_channel_hotkeys:
+
+                bpy.utils.register_class(
+                    free_channel_release_executions[release_executions_index])
+
+                # store the operations for later un-reg
+                addon_keymaps_active_operations.append(
+                    free_channel_release_executions[release_executions_index])
+
+               
+                kmi = km.keymap_items.new(
+                    free_channel_release_executions[release_executions_index].bl_idname, key, 'RELEASE', ctrl=False, shift=False)
+                addon_keymaps_active.append((km, kmi))
+
+                release_executions_index += 1
+
+            # ------------------------------------------------------------------------
+            #    EXTRA UI
+            # ------------------------------------------------------------------------
+            # Change the channel name, but only if it hasnt been done
+            if 'Channel 6' in bpy.context.scene.sequence_editor.channels:
+                # Get the sequence editor
+                seq_editor = bpy.context.scene.sequence_editor
+                # Get the channel to rename and lock
+                channel_to_rename = seq_editor.channels['Channel 6']
+                # Rename the channel
+                channel_to_rename.name = 'FREE CHANNEL'
 
 
 
