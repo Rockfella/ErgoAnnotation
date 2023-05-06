@@ -4,6 +4,72 @@ from bpy.types import Operator
 from bpy.app.handlers import persistent
 from .ea_inputswitch import inputSwitchClass
 from .ea_constants import Constants
+from .ea_global_variables import SavePreferencesOperator
+
+
+class MY_OT_SaveAllPreferences(bpy.types.Operator):
+    bl_idname = "my.preferencesavecall"
+    bl_label = "Call Function"
+    index: bpy.props.IntProperty()
+    
+
+    def execute(self, context):
+        
+        bpy.ops.preferences.save()
+
+        return {'FINISHED'}
+    
+
+class MY_OT_AddFreeChannelInput(bpy.types.Operator):
+    bl_idname = "my.preferencesaddfreechannelinput"
+    bl_label = "Call Function"
+    text: bpy.props.StringProperty(default="Add Input")
+
+    def execute(self, context):
+        
+        #Add the number of slots visible
+        addon_prefs = bpy.context.preferences.addons[__package__].preferences
+        free_channel_vars = addon_prefs.free_channel_vars
+
+        #setting a cap on how many slots that can be added
+        if free_channel_vars.slots_to_show < 20:
+            free_channel_vars.slots_to_show += 1
+            bpy.ops.preferences.save()
+        else:
+            self.text = "Slots filled"
+            free_channel_vars.slots_to_show = 3
+            
+        return {'FINISHED'}
+
+
+class MY_OT_CleanFreeChannelInput(bpy.types.Operator):
+    bl_idname = "my.preferencescleanfreechannelinput"
+    bl_label = "Really want to clear all?"
+    text: bpy.props.StringProperty(default="Add Input")
+
+    def execute(self, context):
+
+        # Add the number of slots visible
+        addon_prefs = bpy.context.preferences.addons[__package__].preferences
+        free_channel_vars = addon_prefs.free_channel_vars
+
+        # Loop through each StringProperty in the class
+        loop_index = 0
+        for key, prop in free_channel_vars.bl_rna.properties.items():
+            # Skip properties that are not StringProperties
+
+            if key.startswith('slot_'):
+                clean_str = str("Empty") + str(loop_index)
+                setattr(free_channel_vars, key, clean_str)
+                loop_index += 1
+
+        bpy.ops.preferences.save()
+
+        return {'FINISHED'}
+    
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self, event)
+
 
 class EA_OT_Master_Clock_Button(Operator):
     bl_idname = "myaddon.master_button_operator"

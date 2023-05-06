@@ -1,6 +1,8 @@
 import bpy
 
 from bpy.types import Panel
+from .ea_constants import Constants
+from .ea_ot_right_click_handler import CreatedOperatorsFreeChannel
 
 
 class EA_PT_Panel(Panel):
@@ -20,6 +22,58 @@ class EA_PT_Panel(Panel):
                     expand=True)
         # Add an input field with a callback to the input_function
 
+
+class EA_PT_Panel_Free_Channel(Panel):
+    bl_label = "Free Channel Inputs"
+    bl_idname = "SEQUENCER_PT_my_addon_panel_free_channel"
+    bl_space_type = 'SEQUENCE_EDITOR'
+    bl_region_type = 'UI'
+    bl_category = 'ERGONOMICS'
+
+    def draw(self, context):
+        layout = self.layout
+
+        addon_prefs = bpy.context.preferences.addons[__package__].preferences
+        free_channel_vars = addon_prefs.free_channel_vars
+        
+        slots_to_show = free_channel_vars.slots_to_show
+        
+        
+
+        row_second = layout.row()
+        op = row_second.operator(
+            "my.preferencesaddfreechannelinput", text="Add Input")
+
+        # Loop through each StringProperty in the class
+        loop_index = 0
+        for key, prop in free_channel_vars.bl_rna.properties.items():
+            # Skip properties that are not StringProperties
+            
+            if key.startswith('slot_') and loop_index <= slots_to_show:
+
+               
+            
+                row_next = layout.row()
+                split = row_next.split(factor=1.0)
+                prop_ui = split.prop(free_channel_vars, key, text=str(loop_index + 1),
+                                         expand=True)
+                current_value = getattr(free_channel_vars, key)
+                    
+                
+                
+
+                loop_index += 1
+
+        row_first = layout.row()
+        op = row_first.operator("my.preferencesavecall", text="Save Inputs")
+        row_third = layout.row()
+        op = row_third.operator(
+            "my.preferencescleanfreechannelinput", text="Clean all")
+            
+
+        
+            
+       
 
 class EA_PT_Panel_Inputs(Panel):
     bl_label = "Input Model"
