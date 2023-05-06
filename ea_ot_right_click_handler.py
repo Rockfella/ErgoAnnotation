@@ -60,7 +60,7 @@ def execute_operator(IntValue):
 
 
                 active_strip.name = str(old_input_type) + ", " + str(newValue) + "," + str(old_indput_id) + ", " + str(datetime.datetime.now())
-                active_strip.color_tag = "COLOR_04"
+                
                 if hasattr(active_strip, "text"):
                     active_strip.text = str(
                         old_input_type) + ", " + str(newValue) + "," + str(old_indput_id)

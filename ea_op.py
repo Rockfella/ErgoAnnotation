@@ -320,12 +320,12 @@ def setWaterMasterTime(self, context):
     # Set the font and size for the text strip
     text_strip.font_size = 50.0
     # Set the position and alignment of the text strip
-    text_strip.location = (0.1, 0.1)  # Set the position of the text strip
+    text_strip.location = (0.05, 0.1)  # Set the position of the text strip
     text_strip.use_shadow = False
     text_strip.use_box = True
     text_strip.shadow_color = (0, 0, 0, 0)  # Set the shadow color
     # text_strip.wrap_width = 300  # Set the wrap width of the text strip
-    text_strip.align_x = 'CENTER'  # Set the horizontal alignment
+    text_strip.align_x = 'LEFT'  # Set the horizontal alignment
     text_strip.align_y = 'CENTER'  # Set the vertical alignment
 
     

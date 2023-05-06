@@ -365,7 +365,7 @@ def executeThePressFromKey(self, context, key):
         current_input_str = Constants.DUET_LEFT[2]
         current_input_channel = Constants.DUET_LEFT[1]
         text_strip_visual_text = current_input_str + " OMNI-RES:" + str(key)
-        text_strip_visual_location = (0.20, 0.18)
+        text_strip_visual_location = (0.05, 0.18)
         choosen_tag_color = pickTagColorForDuet(key)
         text_strip_visual_color = pickVisualTextColorForDuet(key)
         
@@ -374,7 +374,7 @@ def executeThePressFromKey(self, context, key):
         current_input_str = Constants.DUET_RIGHT[2] 
         current_input_channel = Constants.DUET_RIGHT[1]
         text_strip_visual_text = current_input_str + " OMNI-RES:" + str(key)
-        text_strip_visual_location = (0.20, 0.25)
+        text_strip_visual_location = (0.05, 0.25)
         choosen_tag_color = pickTagColorForDuet(key)
         text_strip_visual_color = pickVisualTextColorForDuet(key)
 
@@ -382,9 +382,9 @@ def executeThePressFromKey(self, context, key):
         current_input_str = Constants.FREE_CHANNEL[2]
         current_input_channel = Constants.FREE_CHANNEL[1]
         text_strip_visual_text = current_input_str + ", " + "EMPTY"
-        text_strip_visual_location = (0.18, 0.32)
-        choosen_tag_color = "COLOR_04"
-        text_strip_visual_color = (0.48, 0.80, 0.48, 1.00)
+        text_strip_visual_location = (0.05, 0.32)
+        choosen_tag_color = "COLOR_05"
+        text_strip_visual_color = (0.36, 0.71, 0.92, 1.00)
 
 
     time_now = datetime.datetime.now()
@@ -428,7 +428,7 @@ def executeThePressFromKey(self, context, key):
     text_strip.use_box = True
     text_strip.shadow_color = (0, 0, 0, 0)  # Set the shadow color
     # text_strip.wrap_width = 300  # Set the wrap width of the text strip
-    text_strip.align_x = 'CENTER'  # Set the horizontal alignment
+    text_strip.align_x = 'LEFT'  # Set the horizontal alignment
     text_strip.align_y = 'CENTER'  # Set the vertical alignment
     text_strip.color_tag = choosen_tag_color
 
