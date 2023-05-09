@@ -10,6 +10,7 @@ from .ea_global_variables import SavePreferencesOperator
 class MY_OT_SaveAllPreferences(bpy.types.Operator):
     bl_idname = "my.preferencesavecall"
     bl_label = "Call Function"
+    bl_description = "Save to presets"
     index: bpy.props.IntProperty()
     
 
@@ -23,6 +24,7 @@ class MY_OT_SaveAllPreferences(bpy.types.Operator):
 class MY_OT_AddFreeChannelInput(bpy.types.Operator):
     bl_idname = "my.preferencesaddfreechannelinput"
     bl_label = "Call Function"
+    bl_description = "Add inputs available for the free channel"
     text: bpy.props.StringProperty(default="Add Input")
 
     def execute(self, context):
@@ -45,6 +47,7 @@ class MY_OT_AddFreeChannelInput(bpy.types.Operator):
 class MY_OT_CleanFreeChannelInput(bpy.types.Operator):
     bl_idname = "my.preferencescleanfreechannelinput"
     bl_label = "Really want to clear all?"
+    bl_description = "Clear the list of inputs for the free channel"
     text: bpy.props.StringProperty(default="Add Input")
 
     def execute(self, context):
@@ -62,7 +65,7 @@ class MY_OT_CleanFreeChannelInput(bpy.types.Operator):
                 clean_str = str("Empty") + str(loop_index)
                 setattr(free_channel_vars, key, clean_str)
                 loop_index += 1
-
+        free_channel_vars.slots_to_show = 3
         bpy.ops.preferences.save()
 
         return {'FINISHED'}
@@ -216,6 +219,76 @@ class EA_OT_Export_Data_Button(Operator):
         return {'FINISHED'}
 
 
+class SEQUENCE_OT_custom_add_movie_strip(bpy.types.Operator):
+    """Custom Add Movie Strip Operator"""
+    bl_idname = "sequence.custom_add_movie_strip"
+    bl_label = "Import Video"
+    bl_description = "Import video to sequencer"
+    filepath: bpy.props.StringProperty(
+        name="File Path",
+        subtype='FILE_PATH',
+    )
+
+    def execute(self, context):
+        # Set the channels for video and audio
+        video_channel = 0
+        audio_channel = 1
+
+        # Add movie strip using the correct "Add Movie" operator
+        bpy.ops.sequencer.movie_strip_add(
+            filepath=self.filepath, channel=video_channel, frame_start=1)
+
+        # Move the audio strip to the desired channel
+        for strip in bpy.context.selected_sequences:
+            if strip.type == 'SOUND':
+                strip.channel = audio_channel
+                strip.name = 'SOUND'
+
+         # Change the channel name, but only if it hasnt been done
+            if 'Channel 1' in bpy.context.scene.sequence_editor.channels:
+                # Get the sequence editor
+                seq_editor = bpy.context.scene.sequence_editor
+                # Get the channel to rename and lock
+                channel_to_rename = seq_editor.channels['Channel 1']
+                # Rename the channel
+                channel_to_rename.name = 'SOUND'
+            if 'Channel 2' in bpy.context.scene.sequence_editor.channels:
+                # Get the sequence editor
+                seq_editor = bpy.context.scene.sequence_editor
+                # Get the channel to rename and lock
+                channel_to_rename = seq_editor.channels['Channel 2']
+                # Rename the channel
+                channel_to_rename.name = 'VIDEO'
+
+        #Adapt the scene frame duration to the movieclip
+        scene = bpy.context.scene
+        sequence_duration = 0
+        sequences = bpy.data.scenes[bpy.context.scene.name].sequence_editor.sequences
+        for sequence in sequences:
+            if sequence.type == 'MOVIE':
+
+            # sequence_duration = sequence.frame_end - sequence.frame_start
+            # sequence.frame_start = newStart - current_distance_for_master
+                sequence_duration = sequence.frame_duration
+            # sequence.frame_end = newStart + sequence_duration
+            # sequences.remove(sequence)
+            # break
+
+        # scene.frame_start = round(newStart) - current_distance_for_master
+        scene.frame_end = sequence_duration
+        # scene.frame_current = round(newStart)
+
+
+
+
+
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+
 
 def check_string_format(string):
     # Split the string by colon ":"
@@ -255,25 +328,8 @@ def setNewMasterClock(self, context):
     calc_master_frame = bpy.data.scenes[bpy.context.scene.name].master_time_frame
     calc_master_time = bpy.data.scenes[bpy.context.scene.name].master_time
 
-    # newStart = frame_from_smpte(calc_master_time)
-  #
-    # Move the sequence according to the new frame and substract the distance of the marker
-    # current_distance_for_master = scene.frame_current
-    sequence_duration = 0
-    sequences = bpy.data.scenes[bpy.context.scene.name].sequence_editor.sequences
-    for sequence in sequences:
-        if sequence.type == 'MOVIE':
-
-            # sequence_duration = sequence.frame_end - sequence.frame_start
-            # sequence.frame_start = newStart - current_distance_for_master
-            sequence_duration = sequence.frame_duration
-            # sequence.frame_end = newStart + sequence_duration
-            # sequences.remove(sequence)
-            # break
-
-    # scene.frame_start = round(newStart) - current_distance_for_master
-    scene.frame_end = sequence_duration
-    # scene.frame_current = round(newStart)
+  
+   
 
     setWaterMasterTime(self, context)
 

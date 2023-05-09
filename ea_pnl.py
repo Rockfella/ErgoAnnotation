@@ -125,4 +125,16 @@ class EA_PT_Panel_Export(Panel):
         layout.operator("myaddon.export_data_operator")
         
 
+class EA_PT_Panel_Video_Import(Panel):
+    bl_label = "Import"
+    bl_idname = "SEQUENCER_PT_video_import"
+    bl_space_type = 'SEQUENCE_EDITOR'
+    bl_region_type = 'UI'
+    bl_category = 'ERGONOMICS'
 
+    def draw(self, context):
+        layout = self.layout
+
+        # Add a button with a callback to the button_function
+        layout.operator("sequence.custom_add_movie_strip")
+        

@@ -406,39 +406,53 @@ def executeThePressFromKey(self, context, key):
     elif curren_input == Constants.FREE_CHANNEL[0]:
         image_str = sequence_name_free_channel
 
-    text_strip = bpy.data.scenes[bpy.context.scene.name].sequence_editor.sequences.new_effect(
-        name=image_str,
-        type='TEXT',
-        frame_start=current_frame,
-        frame_end=current_frame + 5,
-        channel=current_input_channel
-    )
+    strip_exists = False
+
+    if sequence_editor is not None:
+        for seq in sequence_editor.sequences:
+            if seq.channel == current_input_channel and (seq.frame_final_start <= current_frame and seq.frame_final_end >= current_frame):
+                strip_exists = True
+                break
+
+    if not strip_exists:
+     # Add new strip here
+
+   
+        text_strip = bpy.data.scenes[bpy.context.scene.name].sequence_editor.sequences.new_effect(
+            name=image_str,
+            type='TEXT',
+            frame_start=current_frame,
+            frame_end=current_frame + 5,
+            channel=current_input_channel
+        )
 
 
-    text_strip.text = text_strip_visual_text
-    # Set the font and size for the text strip
-    text_strip.font_size = 50.0
-    text_strip.color = text_strip_visual_color
+        text_strip.text = text_strip_visual_text
+        # Set the font and size for the text strip
+        text_strip.font_size = 50.0
+        text_strip.color = text_strip_visual_color
 
-    text_strip.use_bold = True
-    # Set the position and alignment of the text strip
-    # Set the position of the text strip
-    text_strip.location = text_strip_visual_location
-    text_strip.use_shadow = True
-    text_strip.use_box = True
-    text_strip.shadow_color = (0, 0, 0, 0)  # Set the shadow color
-    # text_strip.wrap_width = 300  # Set the wrap width of the text strip
-    text_strip.align_x = 'LEFT'  # Set the horizontal alignment
-    text_strip.align_y = 'CENTER'  # Set the vertical alignment
-    text_strip.color_tag = choosen_tag_color
+        text_strip.use_bold = True
+        # Set the position and alignment of the text strip
+        # Set the position of the text strip
+        text_strip.location = text_strip_visual_location
+        text_strip.use_shadow = True
+        text_strip.use_box = True
+        text_strip.shadow_color = (0, 0, 0, 0)  # Set the shadow color
+        # text_strip.wrap_width = 300  # Set the wrap width of the text strip
+        text_strip.align_x = 'LEFT'  # Set the horizontal alignment
+        text_strip.align_y = 'CENTER'  # Set the vertical alignment
+        text_strip.color_tag = choosen_tag_color
 
-    current_frame = bpy.context.scene.frame_current
+        current_frame = bpy.context.scene.frame_current
 
-    # If we ever need markers
-    # scene.timeline_markers.new(num_markers_str, frame=current_frame)
+        # If we ever need markers
+        # scene.timeline_markers.new(num_markers_str, frame=current_frame)
 
-    # Initiate the drag of the sequence just created
-    bpy.app.handlers.frame_change_post.append(auto_drag_strip)
+        # Initiate the drag of the sequence just created
+        # Check if there is another stripped being dragged first
+        if auto_drag_strip not in bpy.app.handlers.frame_change_post:
+            bpy.app.handlers.frame_change_post.append(auto_drag_strip)
 
 
 
@@ -449,7 +463,9 @@ def executeTheReleaseFromKey(self, context, key):
     # scene.timeline_markers.new(num_markers_str, frame=current_frame)
 
     # Stop the drag of the sequence
-    bpy.app.handlers.frame_change_post.remove(auto_drag_strip)
+    if auto_drag_strip in bpy.app.handlers.frame_change_post:
+        bpy.app.handlers.frame_change_post.remove(auto_drag_strip)
+    
 
 
 def auto_drag_strip(scene, depsgraph):

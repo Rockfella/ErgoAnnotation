@@ -6,7 +6,7 @@ class Constants:
     FREE_CHANNEL = (3, 6, "FC")
 
     POSTURE = (3, 6, "POSTURE")
-    EXPORT_TYPES = ["MASTER CLOCK", "DUET LEFT", "DUET RIGHT"]
+    EXPORT_TYPES = ["MASTER CLOCK", "DUET LEFT", "DUET RIGHT", "FREE CHANNEL"]
     OMNI_RES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] 
 
     #str_OMNI_RES name, label, value  

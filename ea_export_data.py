@@ -18,7 +18,7 @@ def write_some_data(context, filepath, use_some_setting):
     data_master_clock = []
     data_DUET_L = []
     data_DUET_R = []
-    
+    data_FREE_CHANNEL = []
 
     scene = bpy.context.scene
     # Store the current frame to restore it later
@@ -31,6 +31,7 @@ def write_some_data(context, filepath, use_some_setting):
         # Print the frame number
         is_in_range_data_DUET_L = False
         is_in_range_data_DUET_R = False
+        is_in_range_data_FREE_CHANNEL = False
         for strip in scene.sequence_editor.sequences:
             if strip.type == 'TEXT':
                
@@ -51,17 +52,23 @@ def write_some_data(context, filepath, use_some_setting):
                         data_DUET_R.append(filter_name[1])
                         is_in_range_data_DUET_R = True
 
+                    elif filter_name[0] == Constants.FREE_CHANNEL[2]:
+                        data_FREE_CHANNEL.append(filter_name[1])
+                        is_in_range_data_FREE_CHANNEL = True
+
         if is_in_range_data_DUET_L == False:
             data_DUET_L.append(-1)
         if is_in_range_data_DUET_R == False:
             data_DUET_R.append(-1)
+        if is_in_range_data_FREE_CHANNEL == False:
+            data_FREE_CHANNEL.append(-1)
                     
 
     index = 0   
     for d in data_master_clock:
         
         data.append([data_master_clock[index],
-                    data_DUET_L[index], data_DUET_R[index]])
+                    data_DUET_L[index], data_DUET_R[index], data_FREE_CHANNEL[index]])
 
         index += 1
         # print("Frame number:", frame)

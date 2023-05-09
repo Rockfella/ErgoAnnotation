@@ -37,9 +37,9 @@ from bpy.types import (Panel,
                        PropertyGroup,
                        )
 
-from . ea_op import EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_Export_Data_Button, EA_OT_FREE_CHANNEL_Button, MY_OT_SaveAllPreferences, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput
+from . ea_op import EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_Export_Data_Button, EA_OT_FREE_CHANNEL_Button, MY_OT_SaveAllPreferences, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip
 
-from . ea_pnl import EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export, EA_PT_Panel_Free_Channel
+from . ea_pnl import EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export, EA_PT_Panel_Free_Channel, EA_PT_Panel_Video_Import
 
 from . ea_export_data import ExportSomeData
 
@@ -51,8 +51,8 @@ from .ea_global_variables import FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences,
 
 
 #Regular classes
-classes = (EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_FREE_CHANNEL_Button, EA_OT_Export_Data_Button, EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export,
-           ExportSomeData, SEQUENCER_MT_custom_menu, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput)
+classes = (EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_FREE_CHANNEL_Button, EA_OT_Export_Data_Button, EA_PT_Panel_Video_Import, EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export,
+           ExportSomeData, SEQUENCER_MT_custom_menu, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip)
 def register():
 
     bpy.types.Scene.master_time = bpy.props.StringProperty(name="master_time", default="00:00:00:00")
