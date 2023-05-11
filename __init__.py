@@ -37,7 +37,7 @@ from bpy.types import (Panel,
                        PropertyGroup,
                        )
 
-from . ea_op import EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_Export_Data_Button, EA_OT_FREE_CHANNEL_Button, MY_OT_SaveAllPreferences, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip
+from . ea_op import EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_Export_Data_Button, EA_OT_FREE_CHANNEL_Button, MY_OT_SaveAllPreferences, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Push
 
 from . ea_pnl import EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export, EA_PT_Panel_Free_Channel, EA_PT_Panel_Video_Import
 
@@ -52,11 +52,14 @@ from .ea_global_variables import FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences,
 
 #Regular classes
 classes = (EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_FREE_CHANNEL_Button, EA_OT_Export_Data_Button, EA_PT_Panel_Video_Import, EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export,
-           ExportSomeData, SEQUENCER_MT_custom_menu, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip)
+           ExportSomeData, SEQUENCER_MT_custom_menu, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Push)
 def register():
 
     bpy.types.Scene.master_time = bpy.props.StringProperty(name="master_time", default="00:00:00:00")
     bpy.types.Scene.master_time_frame = bpy.props.IntProperty(name="master_time_frame")
+    bpy.types.Scene.master_time_pusher = bpy.props.StringProperty(
+        name="master_time_pusher", default="00:00:00:00")
+    
     bpy.types.Scene.active_input = bpy.props.IntProperty(
         name="active_input")
     
@@ -98,6 +101,7 @@ def load_handler(dummy):
 
 def unregister():
     del bpy.types.Scene.master_time
+    del bpy.types.Scene.master_time_pusher
     del bpy.types.Scene.master_time_frame
     del bpy.types.Scene.active_input
     del bpy.types.WindowManager.duet_left_operator_toggle
@@ -182,6 +186,7 @@ def frame_from_smpte(smpte_timecode: str, fps=None, fps_base=None) -> int:
         fps_base = bpy.context.scene.render.fps_base
         fps_real = fps / fps_base
 
+
     # Split the timecode into its components
     timecode_parts = smpte_timecode.split(':')
     hours = int(timecode_parts[0])
@@ -192,9 +197,9 @@ def frame_from_smpte(smpte_timecode: str, fps=None, fps_base=None) -> int:
     # print("FPS_REAL")
     # print(fps_real)
 
-    hours_seconds_frames = ((hours * 60) * 60) * fps_real
-    minutes_seconds_frames = (minutes * 60) * fps_real
-    seconds_frames = seconds * fps_real
+    hours_seconds_frames = ((hours * 60) * 60) * round(fps_real)
+    minutes_seconds_frames = (minutes * 60) * round(fps_real)
+    seconds_frames = seconds * round(fps_real)
     frames_frames = frames
 
     # Calculate the total number of frames
