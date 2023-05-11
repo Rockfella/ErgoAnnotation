@@ -92,6 +92,26 @@ class EA_OT_Master_Clock_Button(Operator):
         return {'FINISHED'}
 
 
+class EA_OT_Master_Clock_Button_Push(Operator):
+    bl_idname = "myaddon.master_button_operator_push"
+    bl_label = "Sync Clip to Master Clock"
+    bl_description = "Pushes the selected clip to the set master clock"
+
+    def execute(self, context):
+        # button_function(self, context)
+
+        if check_string_format(context.scene.master_time):
+            print("String is in the correct format.")
+            #Add function that pushes the active strip to whatever frame the master_push variables says it should be at
+
+
+
+        else:
+            print("String is not in the correct format.")
+
+        return {'FINISHED'}
+
+
 class EA_OT_Round_FPS_Button(Operator):
     bl_idname = "myaddon.round_fps_button_operator"
     bl_label = "Round FPS"

@@ -20,7 +20,15 @@ class EA_PT_Panel(Panel):
         layout.operator("myaddon.master_button_operator")
         layout.prop(context.scene, "master_time", text="Time",
                     expand=True)
-        # Add an input field with a callback to the input_function
+        scene = bpy.context.scene
+        for strip in scene.sequence_editor.sequences_all:
+            if strip.type == 'TEXT':
+                if strip.name == '@master.time':
+
+                    layout.prop(context.scene, "master_time_pusher", text="Push to",
+                        expand=True)
+                    layout.operator("myaddon.master_button_operator_push")
+                
 
 
 class EA_PT_Panel_Free_Channel(Panel):
