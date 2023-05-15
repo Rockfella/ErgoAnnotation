@@ -48,6 +48,7 @@ from .ea_ot_right_click_handler import SEQUENCER_MT_custom_menu
 
 from .ea_global_variables import FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, SavePreferencesOperator
 
+from .ea_constants import frame_from_smpte
 
 
 #Regular classes
@@ -161,54 +162,24 @@ def meta_text_handler(scene, depsgraph):
         if strip.type == 'TEXT':
 
             if strip.name == '@master.time':
+                
+                fps = bpy.context.scene.render.fps
+                fps_base = bpy.context.scene.render.fps_base
+                fps_real = fps / fps_base
 
-                 fps = bpy.context.scene.render.fps
-                 fps_base = bpy.context.scene.render.fps_base
-                 fps_real = fps / fps_base
+                # Input SMPTE formatted string
+                smpte_string_current = bpy.utils.smpte_from_frame(
+                    (scene.frame_current + frames_from_master_clock - calc_master_frame), fps=fps, fps_base=fps_base)
 
-                 # Input SMPTE formatted string
-                 smpte_string_current = bpy.utils.smpte_from_frame(
-                     (scene.frame_current + frames_from_master_clock - calc_master_frame), fps=fps, fps_base=fps_base)
+                # Split the string using ":" as the delimiter
+                hours_curr, minutes_curr, seconds_curr, frames_curr = smpte_string_current.split(
+                    ":")
 
-                 # Split the string using ":" as the delimiter
-                 hours_curr, minutes_curr, seconds_curr, frames_curr = smpte_string_current.split(
-                     ":")
-
-                 strip.text = str(hours_curr) + ':' + str(minutes_curr) + \
+                strip.text = str(hours_curr) + ':' + str(minutes_curr) + \
                      ':' + str(seconds_curr) + '+' + str(frames_curr)
                  
 
-def frame_from_smpte(smpte_timecode: str, fps=None, fps_base=None) -> int:
 
-    if fps == None or fps_base == None:
-        # Use current scene fps if fps and fps_base are not provided
-        fps = bpy.context.scene.render.fps
-        fps_base = bpy.context.scene.render.fps_base
-        fps_real = fps / fps_base
-
-
-    # Split the timecode into its components
-    timecode_parts = smpte_timecode.split(':')
-    hours = int(timecode_parts[0])
-    minutes = int(timecode_parts[1])
-    seconds = int(timecode_parts[2])
-    frames = int(timecode_parts[3])
-
-    # print("FPS_REAL")
-    # print(fps_real)
-
-    hours_seconds_frames = ((hours * 60) * 60) * round(fps_real)
-    minutes_seconds_frames = (minutes * 60) * round(fps_real)
-    seconds_frames = seconds * round(fps_real)
-    frames_frames = frames
-
-    # Calculate the total number of frames
-    total_frames = (hours_seconds_frames +
-                    minutes_seconds_frames + seconds_frames + frames)
-
-    # print(hours_seconds_frames, minutes_seconds_frames,
-    #      seconds_frames, frames_frames)
-    return total_frames
 
 
 def custom_menu_func(self, context):

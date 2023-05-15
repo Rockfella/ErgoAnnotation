@@ -25,9 +25,10 @@ class EA_PT_Panel(Panel):
             if strip.type == 'TEXT':
                 if strip.name == '@master.time':
 
-                    layout.prop(context.scene, "master_time_pusher", text="Push to",
+                    layout.prop(context.scene, "master_time_pusher", text="Adapt",
                         expand=True)
-                    layout.operator("myaddon.master_button_operator_push")
+                    layout.operator(
+                        "myaddon.master_button_operator_push", text="Adapt Clip to Master Clock")
                 
 
 
