@@ -82,7 +82,7 @@ def register():
 
 
 
-
+    #Button that toggles export
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
     bpy.app.handlers.load_post.append(load_handler)
     for c in classes:

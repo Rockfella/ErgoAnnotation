@@ -115,6 +115,7 @@ class EA_OT_Master_Clock_Button_Adapt(Operator):
 
         if check_string_format(context.scene.master_time_adaption):
             print("String is in the correct format.")
+
             #Add function that pushes the active strip to whatever frame the master_push variables says it should be at
             scene = bpy.context.scene
             fps = bpy.context.scene.render.fps
@@ -154,7 +155,10 @@ class EA_OT_Master_Clock_Button_Adapt(Operator):
     #TODO: FIGURE OUT HOW THIS CAN BE DONE WITHOUT A COPY OF THE ABOVE CODE
     def invoke(self, context, event):
 
-        print("String is in the correct format.")
+        # ------------------------------------------------------------------------
+        #    Adaption handler, to make sure not too big changes to the strip is made
+        # ------------------------------------------------------------------------
+        
         # Add function that pushes the active strip to whatever frame the master_push variables says it should be at
         scene = bpy.context.scene
         fps = bpy.context.scene.render.fps
@@ -167,7 +171,6 @@ class EA_OT_Master_Clock_Button_Adapt(Operator):
         calc_master_frame = bpy.data.scenes[bpy.context.scene.name].master_time_frame
         calc_master_time = bpy.data.scenes[bpy.context.scene.name].master_time
         calc_master_time_adaption = bpy.data.scenes[bpy.context.scene.name].master_time_adaption
-
         frames_from_master_clock = frame_from_smpte(calc_master_time)
 
         # Input SMPTE formatted string
@@ -178,16 +181,19 @@ class EA_OT_Master_Clock_Button_Adapt(Operator):
             smpte_string_current)
         frames_from_time_pusher = frame_from_smpte(calc_master_time_adaption)
         total_frames_to_change = frames_from_time_pusher - frames_from_current_master_clock
+        
 
-        if total_frames_to_change > 150:
+
+        #Too big adaptions should not be performed, if for example the user imports a 60 FPS to a 30 FPS project, the fps should first be converted seperatly
+        if abs(total_frames_to_change) > 150:
             self.report({'ERROR'}, "The adoption is too large, please convert the clip fps before importing it instead")
             return {'CANCELLED'}
-        elif total_frames_to_change >= 50:
+        elif abs(total_frames_to_change) >= 50:
             return context.window_manager.invoke_confirm(self, event)
         else:
             return self.execute(context)
         
-#Johan
+
 class EA_OT_Master_Clock_Button_Move(Operator):
     bl_idname = "myaddon.master_button_operator_move"
     bl_description = "Move the selected clip according to master clock"
@@ -198,14 +204,14 @@ class EA_OT_Master_Clock_Button_Move(Operator):
         # Get all markers
        
         #Calculates the difference between the marker and the specific adaptation time and moves the strip accordingly 
-        calculate_execute_the_frame_change(self, context, False)
+        calculate_execute_the_strip_move(self, context, False)
 
         return {'FINISHED'}
     
 
     def invoke(self, context, event):
         
-        is_moving_back = calculate_execute_the_frame_change(self, context, True)
+        is_moving_back = calculate_execute_the_strip_move(self, context, True)
 
         if is_moving_back:
             return context.window_manager.invoke_confirm(self, event)
@@ -214,11 +220,13 @@ class EA_OT_Master_Clock_Button_Move(Operator):
         
 
 
-def calculate_execute_the_frame_change(self, context, justcalc):
+def calculate_execute_the_strip_move(self, context, justcalc):
     
+    #We need a marker for this operation
     markers = bpy.context.scene.timeline_markers
     # Get sequence editor
     seq_editor = bpy.context.scene.sequence_editor
+    #Get the marker that is placed over the strip within its range and consider this the "orginin" frame
     for marker in markers:
         if seq_editor.active_strip.frame_final_start <= marker.frame <= seq_editor.active_strip.frame_final_end:
             # Projected frames from master clock
@@ -267,10 +275,11 @@ def calculate_execute_the_frame_change(self, context, justcalc):
                         actual_time_frame_from_pusher)
             elif the_frame_change == 0:
                     return {'FINISHED'}
-            
+            #Break to avoid it finding more markers and doing the loop again
+            break
    
 
-
+# TODO: CONSIDER REMOVING THE ROUND FPS
 class EA_OT_Round_FPS_Button(Operator):
     bl_idname = "myaddon.round_fps_button_operator"
     bl_label = "Round FPS"
@@ -584,39 +593,40 @@ def setWaterMasterTime(self, context):
 def split_and_shift(num_cuts):
 
     
-    print("NUM CUTS")
-    print(num_cuts)
+   
     # Get sequence editor
     seq_editor = bpy.context.scene.sequence_editor
-
+    # Get current frame
     current_frame = bpy.context.scene.frame_current
 
+    #Strips that will be adapted
     strip1 = None
     strip2 = None
-    #If the user has selected a strip, work with that otherwise just take the recommended channel 1 & 2 and see if there are strips there
+
+    #If the user has selected a meta strip, work with that, otherwise just take the recommended channel 1 & 2 and see if there are strips there
     if seq_editor.active_strip and seq_editor.active_strip.type == 'META':
         strip1 = seq_editor.active_strip
         strip2 = None
 
+    #Grab from channel 1-2
     else:
-
             # Get the strips from channel 1 and 2 which include the current frame
         strip1 = next((s for s in seq_editor.sequences if s.channel == 1 and s.frame_final_start <=
                   current_frame and s.frame_final_end >= current_frame), None)
         strip2 = next((s for s in seq_editor.sequences if s.channel == 2 and s.frame_final_start <=
                   current_frame and s.frame_final_end >= current_frame), None)
 
-    #If there are no such strips, return
+    #If there are no such strips, return, nothing to be done
     if strip1 is None and strip2 is None:
         return
     
 
-
-    # Give them a unique name
+    # Give the cut strips a unique name, so we can find them later
     time_now = datetime.datetime.now()
     formatted_date_time = time_now.strftime("%Y-%m-%d %H:%M:%S")
     original_strip_names = []
     
+    #Information to be stored for the cuts
     save_oneframe_final_start = 0
     save_oneframe_final_end = 0
     save_oneframe_final_duration = 0
@@ -626,7 +636,7 @@ def split_and_shift(num_cuts):
         strip1.name = str(formatted_date_time)
         original_strip_names.append(strip1.name.split(
             ".")[0])
-        #Save atlease one of the strips start and duration for later
+        # Save atlease one of the strips start and duration for later, if we add frames with gap_insert, we need to remove this after we are done
         save_oneframe_final_start = strip1.frame_final_start
         save_oneframe_final_end = strip1.frame_final_end
         save_oneframe_final_duration = strip1.frame_final_duration
@@ -636,14 +646,17 @@ def split_and_shift(num_cuts):
         strip2.name = str(formatted_date_time)
         original_strip_names.append(strip2.name.split(
             ".")[0])
-        # Save atlease one of the strips start and duration for later
+        # Save atlease one of the strips start and duration for later, if we add frames with gap_insert, we need to remove this after we are done
         save_oneframe_final_start = strip2.frame_final_start
         save_oneframe_final_end = strip2.frame_final_end
         save_oneframe_final_duration = strip2.frame_final_duration
         strips_to_cut.append(strip2)
     
     
-
+    
+    # ------------------------------------------------------------------------
+    #    If the adaption requires us to add empty frames to fill lost frames
+    # ------------------------------------------------------------------------
     if num_cuts > 0:
         gap_start = save_oneframe_final_end + num_cuts
 
@@ -661,11 +674,10 @@ def split_and_shift(num_cuts):
             # Deselect all strips
             bpy.ops.sequencer.select_all(action='DESELECT')
 
+            # Select the strips to cut
             for s in strips_to_cut:
                 s.select = True
-            # Select the strips to cut
-            #strip1.select = True
-            #strip2.select = True
+            
 
             # Cut the strips
             bpy.ops.sequencer.split(frame=sp)
@@ -673,18 +685,13 @@ def split_and_shift(num_cuts):
             # Deselect all strips
             bpy.ops.sequencer.select_all(action='DESELECT')
 
-            
-            
-            # Select and move the new strips
-            #for s in new_strips:
-            #    s.select = True
-
             bpy.ops.sequencer.gap_insert(frames=1)
-            #bpy.ops.sequencer.meta_make()
+            
+        #Get the newly cut pieces    
         new_strips = [s for s in seq_editor.sequences if s.name.split(".")[
                 0] in original_strip_names]
 
-        # Select and move the new strips
+        #Select and move the new strips
         for s in new_strips:
             s.select = True
             #In order for the metastrip to land on the same channel, they need to be considered "active"
@@ -699,6 +706,10 @@ def split_and_shift(num_cuts):
                 # shift the strips back to the left by the same amount as the inserted gaps
                 s.frame_start -= num_cuts
 
+    
+    # ------------------------------------------------------------------------
+    #    If the adaption requires us to remove frames to sync with master clock
+    # ------------------------------------------------------------------------
     elif num_cuts < 0:
         num_cuts = abs(num_cuts)
 
@@ -712,14 +723,12 @@ def split_and_shift(num_cuts):
         # Split and shift the strips
         for sp in split_points:
             bpy.context.window.scene.frame_current = sp
-
             # Deselect all strips
             bpy.ops.sequencer.select_all(action='DESELECT')
 
             for s in strips_to_cut:
                 s.select = True
             
-
             # Cut the strips
             bpy.ops.sequencer.split(frame=sp)
             
@@ -727,6 +736,7 @@ def split_and_shift(num_cuts):
             bpy.ops.sequencer.select_all(action='DESELECT')
 
 
+        #Keep the strips separated if channel 1,2 has been used instead of a meta strip
         new_strips_one = []
         new_strips_two = []
 
@@ -741,12 +751,13 @@ def split_and_shift(num_cuts):
             new_strips_two = [s for s in seq_editor.sequences if s.name.split(
              ".")[0] in original_strip_names and s.channel == 2]
         
+        #Sort the new strips
         sorted_sequences_one = sorted(
             new_strips_one, key=lambda s: s.name, reverse=True)
         sorted_sequences_two = sorted(
             new_strips_two, key=lambda s: s.name, reverse=True)
         
-        #Sort the original list to take into account that we work backwards
+        #Sort the original list to take into account that we work backwards, this is required to handle Blenders naming of cuts
         if sorted_sequences_one:
             keep_last_item = sorted_sequences_one[-1]
             del sorted_sequences_one[-1]
@@ -757,11 +768,11 @@ def split_and_shift(num_cuts):
             del sorted_sequences_two[-1]
             sorted_sequences_two.insert(0, keep_last_item)
 
-        #Keepiong track for the move_index
+        #Keepiong track of the move_index
         index_counter_channel_one = 0
         index_counter_channel_two = 0
 
-        #Move index is added since "remove gap is not fully functioning in blender"
+        #Move index is added since "remove gap" is not fully functioning in blender, this in order for clips that are after the adapted clip doesn't move from orginal time
         move_index = []
         for i in range(num_cuts + 1):
             move_index.append(i)
@@ -769,8 +780,6 @@ def split_and_shift(num_cuts):
         #Find the clips and start moving them accoring to the move:index
         #Start with channel 1
         for s in sorted_sequences_one:
-            
-           
             s.frame_final_start = s.frame_final_start + 1
             s.frame_start -= (1 + move_index[index_counter_channel_one])
             index_counter_channel_one += 1
@@ -778,9 +787,6 @@ def split_and_shift(num_cuts):
                 
         #Then channel two    
         for s in sorted_sequences_two:
-
-          
-
             s.frame_final_start = s.frame_final_start + 1
             s.frame_start -= (1 + move_index[index_counter_channel_two])
             index_counter_channel_two += 1
@@ -788,14 +794,14 @@ def split_and_shift(num_cuts):
         #When they have been aligned and are ready, make a meta strip out of them
         print_index = 0
         for one in new_strips_one:
-            print(print_index)
+            
             one.select = True
             
             # In order for the metastrip to land on the same channel, they need to be considered "active"
             seq_editor.active_strip = s
             print_index += 1
         for two in new_strips_two:
-            print(print_index)
+            
             two.select = True
 
             # In order for the metastrip to land on the same channel, they need to be considered "active"

@@ -21,7 +21,8 @@ class EA_PT_Panel(Panel):
         # Get all markers
         markers = bpy.context.scene.timeline_markers
         # Add a button with a callback to the button_function
-        layout.operator("myaddon.round_fps_button_operator")
+        #TODO: CONSIDER REMOVING THE ROUND FPS 
+        #layout.operator("myaddon.round_fps_button_operator")
         layout.operator("myaddon.master_button_operator")
         layout.prop(context.scene, "master_time", text="Time",
                     expand=True)
