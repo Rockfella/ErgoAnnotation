@@ -2,9 +2,10 @@ import bpy
 class Constants:
 
     #INPUT TYPES, id:, channel:
-    DUET_LEFT = (1, 4, "DUET LEFT")
-    DUET_RIGHT = (2, 5, "DUET RIGHT")
-    FREE_CHANNEL = (3, 6, "FC")
+    DUET_LEFT = (1, 5, "DUET LEFT")
+    DUET_RIGHT = (2, 6, "DUET RIGHT")
+    FREE_CHANNEL = (3, 7, "FC")
+    
 
     POSTURE = (3, 6, "POSTURE")
     EXPORT_TYPES = ["MASTER CLOCK", "DUET LEFT", "DUET RIGHT", "FREE CHANNEL"]

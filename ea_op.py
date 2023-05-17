@@ -23,6 +23,17 @@ class MY_OT_SaveAllPreferences(bpy.types.Operator):
         return {'FINISHED'}
     
 
+class EA_OT_AdaptionInfoButton(bpy.types.Operator):
+    """Tooltip for this operator"""
+    bl_idname = "object.adaption_info_button"
+    bl_label = "Adaption or Move"
+    bl_description = "The adapt time can be used align a clip to the master clock, in case when there are missing or additional frames. It can also be used to move a clip to a specific master clock position. To move a clip, please create a meta strip from audio and video, place a marker where in the video it should move from (Hotkey M), a Move button should appear"
+
+    def execute(self, context):
+        #bpy.ops.wm.url_open(url="https://github.com/Rockfella/ergolabs")
+        return {'FINISHED'}
+    
+
 class MY_OT_AddFreeChannelInput(bpy.types.Operator):
     bl_idname = "my.preferencesaddfreechannelinput"
     bl_label = "Call Function"
@@ -94,7 +105,7 @@ class EA_OT_Master_Clock_Button(Operator):
         return {'FINISHED'}
 
 
-class EA_OT_Master_Clock_Button_Push(Operator):
+class EA_OT_Master_Clock_Button_Adapt(Operator):
     bl_idname = "myaddon.master_button_operator_push"
     bl_description = "Pushes the selected clip to the set master clock"
     bl_label = "Looks like the adaption is large, still want to adapt?"
@@ -102,7 +113,7 @@ class EA_OT_Master_Clock_Button_Push(Operator):
     def execute(self, context):
         # button_function(self, context)
 
-        if check_string_format(context.scene.master_time_pusher):
+        if check_string_format(context.scene.master_time_adaption):
             print("String is in the correct format.")
             #Add function that pushes the active strip to whatever frame the master_push variables says it should be at
             scene = bpy.context.scene
@@ -116,7 +127,7 @@ class EA_OT_Master_Clock_Button_Push(Operator):
             # Projected frames from master clock
             calc_master_frame = bpy.data.scenes[bpy.context.scene.name].master_time_frame
             calc_master_time = bpy.data.scenes[bpy.context.scene.name].master_time
-            calc_master_time_pusher = bpy.data.scenes[bpy.context.scene.name].master_time_pusher
+            calc_master_time_adaption = bpy.data.scenes[bpy.context.scene.name].master_time_adaption
 
             frames_from_master_clock = frame_from_smpte(calc_master_time)
 
@@ -126,17 +137,15 @@ class EA_OT_Master_Clock_Button_Push(Operator):
 
 
             frames_from_current_master_clock = frame_from_smpte(smpte_string_current)
-            frames_from_time_pusher = frame_from_smpte(calc_master_time_pusher)
+            frames_from_time_pusher = frame_from_smpte(
+                calc_master_time_adaption)
             total_frames_to_change = frames_from_time_pusher - frames_from_current_master_clock
             
             split_and_shift(round(total_frames_to_change))
 
             #reset the current frame to where we where taking the shift into account
             scene.frame_current = remember_current_frame + round(total_frames_to_change)
-            print("CURRENT MASTER SAYS")
-            print(frames_from_current_master_clock)
-            print("WHAT PUSH TIME SAYS")
-            print(frames_from_time_pusher)
+           
 
         else:
             print("String is not in the correct format.")
@@ -150,15 +159,14 @@ class EA_OT_Master_Clock_Button_Push(Operator):
         scene = bpy.context.scene
         fps = bpy.context.scene.render.fps
         fps_base = bpy.context.scene.render.fps_base
-        fps_real = fps / fps_base
+        
 
-        # Hold the current frame in memory so we can go back
-        remember_current_frame = scene.frame_current
+    
 
         # Projected frames from master clock
         calc_master_frame = bpy.data.scenes[bpy.context.scene.name].master_time_frame
         calc_master_time = bpy.data.scenes[bpy.context.scene.name].master_time
-        calc_master_time_pusher = bpy.data.scenes[bpy.context.scene.name].master_time_pusher
+        calc_master_time_adaption = bpy.data.scenes[bpy.context.scene.name].master_time_adaption
 
         frames_from_master_clock = frame_from_smpte(calc_master_time)
 
@@ -168,7 +176,7 @@ class EA_OT_Master_Clock_Button_Push(Operator):
 
         frames_from_current_master_clock = frame_from_smpte(
             smpte_string_current)
-        frames_from_time_pusher = frame_from_smpte(calc_master_time_pusher)
+        frames_from_time_pusher = frame_from_smpte(calc_master_time_adaption)
         total_frames_to_change = frames_from_time_pusher - frames_from_current_master_clock
 
         if total_frames_to_change > 150:
@@ -178,6 +186,89 @@ class EA_OT_Master_Clock_Button_Push(Operator):
             return context.window_manager.invoke_confirm(self, event)
         else:
             return self.execute(context)
+        
+#Johan
+class EA_OT_Master_Clock_Button_Move(Operator):
+    bl_idname = "myaddon.master_button_operator_move"
+    bl_description = "Move the selected clip according to master clock"
+    bl_label = "The strip might get over another clip"
+
+    def execute(self, context):
+        # button_function(self, context)
+        # Get all markers
+       
+        #Calculates the difference between the marker and the specific adaptation time and moves the strip accordingly 
+        calculate_execute_the_frame_change(self, context, False)
+
+        return {'FINISHED'}
+    
+
+    def invoke(self, context, event):
+        
+        is_moving_back = calculate_execute_the_frame_change(self, context, True)
+
+        if is_moving_back:
+            return context.window_manager.invoke_confirm(self, event)
+        else:
+            return self.execute(context)
+        
+
+
+def calculate_execute_the_frame_change(self, context, justcalc):
+    
+    markers = bpy.context.scene.timeline_markers
+    # Get sequence editor
+    seq_editor = bpy.context.scene.sequence_editor
+    for marker in markers:
+        if seq_editor.active_strip.frame_final_start <= marker.frame <= seq_editor.active_strip.frame_final_end:
+            # Projected frames from master clock
+            calc_master_frame = bpy.data.scenes[bpy.context.scene.name].master_time_frame
+            calc_master_time = bpy.data.scenes[bpy.context.scene.name].master_time
+            calc_master_time_adaption = bpy.data.scenes[bpy.context.scene.name].master_time_adaption
+            frames_from_master_clock = frame_from_smpte(calc_master_time)
+            initial_frame = marker.frame
+
+            frame_from_time_pusher = frame_from_smpte(
+                calc_master_time_adaption)
+
+            
+
+            smtp_at_zero = bpy.utils.smpte_from_frame(
+                (0 + frames_from_master_clock - calc_master_frame))
+
+            frames_at_zero = frame_from_smpte(smtp_at_zero)
+
+            actual_time_frame_from_pusher = frame_from_time_pusher - frames_at_zero
+
+            the_frame_change = initial_frame - actual_time_frame_from_pusher
+
+            
+
+            #Sends back a bool if the function only wanted to provide if the move is negative, see difference at def invoke
+            if justcalc:
+                if the_frame_change > 0:
+                    return True    
+                else:
+                    return False
+
+            if the_frame_change < 0:
+                seq_editor.active_strip.frame_start += abs(
+                    the_frame_change)
+                bpy.context.scene.timeline_markers.remove(
+                        bpy.context.scene.timeline_markers[marker.name])
+                bpy.context.window.scene.frame_current = round(
+                        actual_time_frame_from_pusher)
+            elif the_frame_change > 0:
+                seq_editor.active_strip.frame_start -= abs(
+                        the_frame_change)
+                bpy.context.scene.timeline_markers.remove(
+                bpy.context.scene.timeline_markers[marker.name])
+                bpy.context.window.scene.frame_current = round(
+                        actual_time_frame_from_pusher)
+            elif the_frame_change == 0:
+                    return {'FINISHED'}
+            
+   
 
 
 class EA_OT_Round_FPS_Button(Operator):
@@ -458,7 +549,7 @@ def setWaterMasterTime(self, context):
         type='TEXT',
         frame_start=scene.frame_start,
         frame_end=scene.frame_end,
-        channel=3
+        channel=4
     )
     text_strip.text = ''
     # Set the font and size for the text strip
@@ -500,10 +591,19 @@ def split_and_shift(num_cuts):
 
     current_frame = bpy.context.scene.frame_current
 
-    # Get the strips from channel 1 and 2 which include the current frame
-    strip1 = next((s for s in seq_editor.sequences if s.channel == 1 and s.frame_final_start <=
+    strip1 = None
+    strip2 = None
+    #If the user has selected a strip, work with that otherwise just take the recommended channel 1 & 2 and see if there are strips there
+    if seq_editor.active_strip and seq_editor.active_strip.type == 'META':
+        strip1 = seq_editor.active_strip
+        strip2 = None
+
+    else:
+
+            # Get the strips from channel 1 and 2 which include the current frame
+        strip1 = next((s for s in seq_editor.sequences if s.channel == 1 and s.frame_final_start <=
                   current_frame and s.frame_final_end >= current_frame), None)
-    strip2 = next((s for s in seq_editor.sequences if s.channel == 2 and s.frame_final_start <=
+        strip2 = next((s for s in seq_editor.sequences if s.channel == 2 and s.frame_final_start <=
                   current_frame and s.frame_final_end >= current_frame), None)
 
     #If there are no such strips, return
@@ -598,6 +698,7 @@ def split_and_shift(num_cuts):
             if s.frame_final_start >= gap_start:
                 # shift the strips back to the left by the same amount as the inserted gaps
                 s.frame_start -= num_cuts
+
     elif num_cuts < 0:
         num_cuts = abs(num_cuts)
 
@@ -625,14 +726,23 @@ def split_and_shift(num_cuts):
             # Deselect all strips
             bpy.ops.sequencer.select_all(action='DESELECT')
 
-        #Separating audio and video strip into different lists to keep track
-        new_strips_one = [s for s in seq_editor.sequences if s.name.split(
-            ".")[0] in original_strip_names and s.channel == 1]
+
+        new_strips_one = []
+        new_strips_two = []
+
+        #Separating audio and video strip into different lists to keep track, if the user has created a meta out of the clip it will use one method, otherwise default to using channel 1-2
+        if seq_editor.active_strip and seq_editor.active_strip.type == 'META':
+            new_strips_one = [s for s in seq_editor.sequences if s.name.split(
+                ".")[0] in original_strip_names]
+            new_strips_two = []
+        else:
+            new_strips_one = [s for s in seq_editor.sequences if s.name.split(
+             ".")[0] in original_strip_names and s.channel == 1]
+            new_strips_two = [s for s in seq_editor.sequences if s.name.split(
+             ".")[0] in original_strip_names and s.channel == 2]
+        
         sorted_sequences_one = sorted(
             new_strips_one, key=lambda s: s.name, reverse=True)
-        
-        new_strips_two = [s for s in seq_editor.sequences if s.name.split(
-            ".")[0] in original_strip_names and s.channel == 2]
         sorted_sequences_two = sorted(
             new_strips_two, key=lambda s: s.name, reverse=True)
         
@@ -677,12 +787,17 @@ def split_and_shift(num_cuts):
 
         #When they have been aligned and are ready, make a meta strip out of them
         print_index = 0
-        for one, two in zip(new_strips_one, new_strips_two):
+        for one in new_strips_one:
             print(print_index)
-            
-            two.select = True
             one.select = True
             
+            # In order for the metastrip to land on the same channel, they need to be considered "active"
+            seq_editor.active_strip = s
+            print_index += 1
+        for two in new_strips_two:
+            print(print_index)
+            two.select = True
+
             # In order for the metastrip to land on the same channel, they need to be considered "active"
             seq_editor.active_strip = s
             print_index += 1

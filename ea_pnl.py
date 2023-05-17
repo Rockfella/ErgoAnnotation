@@ -1,5 +1,6 @@
 import bpy
 
+
 from bpy.types import Panel
 from .ea_constants import Constants
 from .ea_ot_right_click_handler import CreatedOperatorsFreeChannel
@@ -14,7 +15,11 @@ class EA_PT_Panel(Panel):
 
     def draw(self, context):
         layout = self.layout
+        # Get sequence editor
+        seq_editor = bpy.context.scene.sequence_editor
 
+        # Get all markers
+        markers = bpy.context.scene.timeline_markers
         # Add a button with a callback to the button_function
         layout.operator("myaddon.round_fps_button_operator")
         layout.operator("myaddon.master_button_operator")
@@ -25,10 +30,27 @@ class EA_PT_Panel(Panel):
             if strip.type == 'TEXT':
                 if strip.name == '@master.time':
 
-                    layout.prop(context.scene, "master_time_pusher", text="Adapt",
+                    layout.prop(context.scene, "master_time_adaption", text="Adapt",
                         expand=True)
+                    row = layout.row()
+                   
+                    row = layout.row()
+                    row.operator("object.adaption_info_button",
+                                 text="", icon='QUESTION')
+                    
                     layout.operator(
                         "myaddon.master_button_operator_push", text="Adapt Clip to Master Clock")
+                    
+                    #A new option to move the strip according the the master time will pop up, if there is a meta strip selected and there is a marker placed within its range, that one will be used to move the strip according to master clock
+                    if seq_editor.active_strip:
+
+                        if seq_editor.active_strip.type == 'META':
+
+                            for marker in markers:
+                                if seq_editor.active_strip.frame_final_start <= marker.frame <= seq_editor.active_strip.frame_final_end:
+                                
+                                    layout.operator(
+                                    "myaddon.master_button_operator_move", text="Move Clip")
                 
 
 
