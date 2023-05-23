@@ -407,6 +407,20 @@ class EA_OT_Export_Data_Button(Operator):
         return {'FINISHED'}
 
 
+class EA_OT_Import_Data_Button(Operator):
+    bl_idname = "myaddon.import_data_operator"
+    bl_label = "Import Data from CSV"
+    bl_description = "Import Data from CSV, make sure to spec type Date Time"
+
+    def execute(self, context):
+        # button_function(self, context)
+
+        print("EXPORT")
+        bpy.ops.import_test.some_data('INVOKE_DEFAULT')
+
+        return {'FINISHED'}
+
+
 class SEQUENCE_OT_custom_add_movie_strip(bpy.types.Operator):
     """Custom Add Movie Strip Operator"""
     bl_idname = "sequence.custom_add_movie_strip"

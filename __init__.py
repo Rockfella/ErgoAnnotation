@@ -37,11 +37,12 @@ from bpy.types import (Panel,
                        PropertyGroup,
                        )
 
-from . ea_op import EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_Export_Data_Button, EA_OT_FREE_CHANNEL_Button, MY_OT_SaveAllPreferences, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton
+from . ea_op import EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_OT_FREE_CHANNEL_Button, MY_OT_SaveAllPreferences, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton
 
-from . ea_pnl import EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export, EA_PT_Panel_Free_Channel, EA_PT_Panel_Video_Import
+from . ea_pnl import EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export, EA_PT_Panel_Free_Channel, EA_PT_Panel_Video_Import, EA_PT_Panel_Import
 
 from . ea_export_data import ExportSomeData
+from . ea_import_data import ImportSomeData
 
 from .ea_ot_right_click_handler import SEQUENCER_MT_custom_menu
 
@@ -52,8 +53,8 @@ from .ea_constants import frame_from_smpte
 
 
 #Regular classes
-classes = (EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_FREE_CHANNEL_Button, EA_OT_Export_Data_Button, EA_PT_Panel_Video_Import, EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export,
-           ExportSomeData, SEQUENCER_MT_custom_menu, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton)
+classes = (EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_FREE_CHANNEL_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_PT_Panel_Video_Import, EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export,
+           ExportSomeData, ImportSomeData, SEQUENCER_MT_custom_menu, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton, EA_PT_Panel_Import)
 def register():
 
     bpy.types.Scene.master_time = bpy.props.StringProperty(name="master_time", default="00:00:00:00")
@@ -85,6 +86,9 @@ def register():
     #Button that toggles export
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
     bpy.app.handlers.load_post.append(load_handler)
+
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
+
     for c in classes:
         
         bpy.utils.register_class(c)
@@ -110,6 +114,7 @@ def unregister():
     del bpy.types.WindowManager.free_channel_operator_toggle
     
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
 
     for c in classes:
        
@@ -149,6 +154,8 @@ def menu_func_export(self, context):
     self.layout.operator(ExportSomeData.bl_idname, text="Text Export Operator")
 
 
+def menu_func_import(self, context):
+    self.layout.operator(ImportSomeData.bl_idname, text="Text Import Operator")
 
 def meta_text_handler(scene, depsgraph):
 

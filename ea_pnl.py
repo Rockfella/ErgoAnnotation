@@ -144,7 +144,7 @@ class EA_PT_Panel_Inputs(Panel):
         
         
 class EA_PT_Panel_Export(Panel):
-    bl_label = "Export"
+    bl_label = "Export File"
     bl_idname = "SEQUENCER_PT_my_addon_panel3"
     bl_space_type = 'SEQUENCE_EDITOR'
     bl_region_type = 'UI'
@@ -155,6 +155,20 @@ class EA_PT_Panel_Export(Panel):
 
         # Add a button with a callback to the button_function
         layout.operator("myaddon.export_data_operator")
+
+
+class EA_PT_Panel_Import(Panel):
+    bl_label = "Import File"
+    bl_idname = "SEQUENCER_PT_my_addon_panel_import_file"
+    bl_space_type = 'SEQUENCE_EDITOR'
+    bl_region_type = 'UI'
+    bl_category = 'ERGONOMICS'
+
+    def draw(self, context):
+        layout = self.layout
+
+        # Add a button with a callback to the button_function
+        layout.operator("myaddon.import_data_operator")
         
 
 class EA_PT_Panel_Video_Import(Panel):
