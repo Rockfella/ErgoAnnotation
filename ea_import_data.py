@@ -7,9 +7,13 @@ from .ea_constants import frame_from_smpte
 import os
 
 
-def read_some_data(context, filepath, unix_time_start, unix_time_end):
+def read_some_data(context, filepath, csv_row_start, csv_row_end):
     # Assuming images are in the same directory as the CSV file
     image_dir = os.path.dirname(filepath)
+
+    print("Start and end row in CSV")
+    print(csv_row_start)
+    print(csv_row_end)
 
     # Get a reference to the current scene and the sequencer
     scene = bpy.context.scene
@@ -19,28 +23,32 @@ def read_some_data(context, filepath, unix_time_start, unix_time_end):
     current_strip = None
     index = 0
     render_fps = bpy.context.scene.render.fps
-    fps_base = bpy.context.scene.render.fps_base if bpy.context.scene.render.fps_base != 0 else 1
 
     with open(filepath, 'r') as f:
         reader = csv.reader(f, delimiter=';')
+        # Skip the first row
+        next(reader)
+
         for row in reader:
-            if unix_time_start <= index <= unix_time_end:
+            if csv_row_start <= index <= csv_row_end:
                 # Get the activity and remove leading/trailing spaces
                 activity = row[1].strip()
+                frame_start = index * render_fps
+
                 if activity != current_activity:
-                    # The activity has changed, create a new image strip
+                    # The activity has changed, if there was a previous strip, extend its end
+                    if current_strip:
+                        current_strip.frame_final_end = frame_start
+
+                    # Create a new strip for the new activity
                     image_path = os.path.join(image_dir, f"{activity}.png")
                     if os.path.isfile(image_path):
                         img = bpy.data.images.load(image_path)
-                        frame_duration = int(render_fps / fps_base)
-                        frame_start = index * frame_duration + 1
-                        frame_end = frame_start + frame_duration - 1
                         current_strip = sequencer.sequences.new_image(
                             name=f"Image Strip {activity}_{index}",
                             filepath=image_path,
                             channel=7,  # You can change the channel if needed
                             frame_start=frame_start,
-                            #frame_end=frame_end,
                             fit_method='FIT',
                         )
 
@@ -51,14 +59,11 @@ def read_some_data(context, filepath, unix_time_start, unix_time_end):
                         current_strip.transform.scale_y = 1.0  # Adjust the vertical scale
                     else:
                         # If there's no image, create a text strip instead
-                        frame_duration = int(render_fps / fps_base)
-                        frame_start = index * frame_duration + 1
-                        frame_end = frame_start + frame_duration - 1
                         current_strip = sequencer.sequences.new_effect(
                             name=f"Text Strip {activity}_{index}",
                             type='TEXT',
                             frame_start=frame_start,
-                            frame_end=frame_end,
+                            frame_end=frame_start + render_fps - 1,  # added frame_end
                             channel=7,
                         )
                         # Adjust the position and scale of the strip
@@ -66,14 +71,15 @@ def read_some_data(context, filepath, unix_time_start, unix_time_end):
                         current_strip.transform.offset_y = -75  # Adjust the vertical position
                         current_strip.transform.scale_x = 1.0  # Adjust the horizontal scale
                         current_strip.transform.scale_y = 1.0  # Adjust the vertical scale
-                        
+
                         current_strip.text = activity
                     current_activity = activity
-                else:
-                    # The activity has not changed, extend the duration of the current strip
-                    if current_strip:
-                        current_strip.frame_final_end += frame_duration - 1
-                index += 1
+
+            index += 1
+
+        # After all rows have been read, extend the final strip to the end
+       # if current_strip:
+       #     current_strip.frame_final_end = index * render_fps
 
     return {'FINISHED'}
 
@@ -94,8 +100,8 @@ class ImportSomeData(Operator, ImportHelper):
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
 
-    unix_time_start: IntProperty(name="Start at Row", default=0)
-    unix_time_end: IntProperty(name="End at Row", default=0)
+    csv_row_start: IntProperty(name="Start at Row", default=0)
+    csv_row_end: IntProperty(name="End at Row", default=100)
 
     type: EnumProperty(
         name="File FPS",
@@ -115,4 +121,4 @@ class ImportSomeData(Operator, ImportHelper):
     )
 
     def execute(self, context):
-        return read_some_data(context, self.filepath, self.unix_time_start, self.unix_time_end)
+        return read_some_data(context, self.filepath, self.csv_row_start, self.csv_row_end)
