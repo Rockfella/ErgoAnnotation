@@ -45,8 +45,10 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
     scene = bpy.context.scene
     sequencer = scene.sequence_editor_create()
 
-    render_fps = bpy.context.scene.render.fps
-
+    
+    fps = bpy.context.scene.render.fps
+    fps_base = bpy.context.scene.render.fps_base
+    fps_real = int(fps / fps_base)
     # Collect data for each day
     day_to_data = collections.defaultdict(list)
 
@@ -328,8 +330,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                     current_strip.text = activity
                 current_activity = activity
                 
-
-            frame_start += render_fps
+            frame_start += fps_real
 
         # After each day, if there is a current strip, extend its end
         if current_strip:
@@ -362,26 +363,26 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
     scn = bpy.context.scene
     seq = scn.sequence_editor
     # check if there are strips in the sequence editor
-    if seq.sequences_all:
+    #if seq.sequences_all:
 
-        # get the frame extents of the strips
-        frame_start = min(strip.frame_start for strip in seq.sequences_all)
-        frame_end = max(strip.frame_final_end for strip in seq.sequences_all)
+    #    # get the frame extents of the strips
+    #    frame_start = min(strip.frame_start for strip in seq.sequences_all)
+    #    frame_end = max(strip.frame_final_end for strip in seq.sequences_all)
 
-        # set the scene's frame range to fit the strips
-        scn.frame_start = int(frame_start)
-        scn.frame_end = int(frame_end)
+    #    # set the scene's frame range to fit the strips
+    #    scn.frame_start = int(frame_start)
+    #    scn.frame_end = int(frame_end)
 
-        for area in bpy.context.screen.areas:
-            if area.type == "SEQUENCE_EDITOR":
-                override = bpy.context.copy()
-                # change context to the sequencer
-                override["area"] = area
-                override["region"] = area.regions[-1]
-                # run the command with the correct context
-                with bpy.context.temp_override(**override):
-                    bpy.ops.sequencer.view_all()
-                break
+    #    for area in bpy.context.screen.areas:
+    #        if area.type == "SEQUENCE_EDITOR":
+    #            override = bpy.context.copy()
+    #            # change context to the sequencer
+    #            override["area"] = area
+    #            override["region"] = area.regions[-1]
+    #            # run the command with the correct context
+    #            with bpy.context.temp_override(**override):
+    #                bpy.ops.sequencer.view_all()
+    #            break
 
 
    
