@@ -8,7 +8,7 @@ import os
 from datetime import datetime, timedelta
 
 import collections
-
+from .ea_constants import Constants
 
 def move_strips_to_end_at(channel, end_frame):
     seqs = bpy.context.scene.sequence_editor.sequences
@@ -33,7 +33,7 @@ def matlab_to_python_datetime(matlab_datenum):
     return datetime.fromordinal(int(matlab_datenum)) + timedelta(days=matlab_datenum % 1) - timedelta(days=366)
 
 
-def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_objects):
+def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_objects, channel_to_import_to, import_type):
     # Assuming images are in the same directory as the CSV file
     image_dir = os.path.dirname(filepath)
 
@@ -155,26 +155,41 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
         next(reader)
 
         for index, row in enumerate(reader):
-            if csv_row_start <= index <= csv_row_end:
-                # Get the activity and remove leading/trailing spaces
+            if import_type == Constants.IMPORT_ACTIPASS:
+
+                #If the import_type is Actipass:
+                if csv_row_start <= index <= csv_row_end:
+                    # Get the activity and remove leading/trailing spaces
+                    activity = row[1].strip()
+                    cadence = row[2].strip()
+
+                    #Calculate walk & run differention 
+                    if int(activity) == 5:
+                        print(cadence)
+                        #Cadence is per minute, each row is a second from ActiPass data
+                        real_cadence = float(cadence) * 60
+                        if real_cadence < 100:
+                            #Walk_slow - Picked 13 as this is not a value found in the export
+                            activity = "13"
+                        elif real_cadence >= 100:
+                            #Walk_Fast
+                            activity = "14"
+                        else:
+                            activity = "5"
+
+
+                    # assuming row[0] is the MATLAB datenum
+                    matlab_datenum = float(row[0])
+                    date = matlab_to_python_datetime(
+                        matlab_datenum).date()  # get the date
+
+                    # Collect the data for this day
+                    day_to_data[date].append(activity)
+
+                    date_counter.append(date)
+            else:
+                #TODO: First listen to the import on column 1, see what timeDate format, now matlab is the only format
                 activity = row[1].strip()
-                cadence = row[2].strip()
-
-                #Calculate walk & run differention 
-                if int(activity) == 5:
-                    print(cadence)
-                    #Cadence is per minute, each row is a second from ActiPass data
-                    real_cadence = float(cadence) * 60
-                    if real_cadence < 100:
-                        #Walk_slow - Picked 13 as this is not a value found in the export
-                        activity = "13"
-                    elif real_cadence >= 100:
-                        #Walk_Fast
-                        activity = "14"
-                    else:
-                        activity = "5"
-
-
                 # assuming row[0] is the MATLAB datenum
                 matlab_datenum = float(row[0])
                 date = matlab_to_python_datetime(
@@ -185,9 +200,10 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
 
                 date_counter.append(date)
 
+
     # Process the data day by day
     for day_index, (date, activities) in enumerate(sorted(day_to_data.items())):
-        channel_start = 10 #Which channel day one should end up on
+        channel_start = channel_to_import_to  # Which channel day one should end up on
         channel = channel_start - day_index  # Start from channel 10 and go down
         frame_start = 1  # Each day starts at frame 1
 
@@ -272,8 +288,8 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                     current_strip.transform.offset_x = -737  # Adjust the horizontal position
                     # Adjust the vertical position
                     current_strip.transform.offset_y = channel_display_position_y
-                    current_strip.transform.scale_x = 0.6  # Adjust the horizontal scale
-                    current_strip.transform.scale_y = 0.6  # Adjust the vertical scale
+                    current_strip.transform.scale_x = 0.4  # Adjust the horizontal scale
+                    current_strip.transform.scale_y = 0.4  # Adjust the vertical scale
                     
                     if create_3d_objects:
 
@@ -319,17 +335,15 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
         if current_strip:
             current_strip.frame_final_duration = int(frame_start - current_strip.frame_start)
     
-        # Rename the channel´s according to date
-        channel_str_name = 'Channel ' + str(channel)
-        if channel_str_name in bpy.context.scene.sequence_editor.channels:
-            # Get the sequence editor
-            seq_editor = bpy.context.scene.sequence_editor
-            # Get the channel to rename and lock
-            channel_to_rename = seq_editor.channels[channel_str_name]
-            # Rename the channel
-            channel_to_rename.name = str(date)
 
-    
+        # Rename the channel´s according to date
+        channel_to_rename = bpy.context.scene.sequence_editor.channels[channel]
+        channel_to_rename.name = str(date)
+
+        
+
+        
+
     #Remember the highest entry value for the moce_strips_to_end
     highest_entry_count = 0
     for date, entry_list in day_to_data.items():
@@ -340,8 +354,34 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
             highest_entry_count = entry_count
 
 
-    #Take the first channel and move the data to the end of the day as this is not full 24h recording
-    move_strips_to_end_at(channel_start, highest_entry_count)
+    #Take the first channel and move the data to the end of the day as this is not full 24h recording if its Acti-pass Data
+    if import_type == Constants.IMPORT_ACTIPASS:
+        move_strips_to_end_at(channel_start, highest_entry_count)
+    #TODO: Add elif what should it do to the data if its not Acti-pass
+    
+    scn = bpy.context.scene
+    seq = scn.sequence_editor
+    # check if there are strips in the sequence editor
+    if seq.sequences_all:
+
+        # get the frame extents of the strips
+        frame_start = min(strip.frame_start for strip in seq.sequences_all)
+        frame_end = max(strip.frame_final_end for strip in seq.sequences_all)
+
+        # set the scene's frame range to fit the strips
+        scn.frame_start = int(frame_start)
+        scn.frame_end = int(frame_end)
+
+        for area in bpy.context.screen.areas:
+            if area.type == "SEQUENCE_EDITOR":
+                override = bpy.context.copy()
+                # change context to the sequencer
+                override["area"] = area
+                override["region"] = area.regions[-1]
+                # run the command with the correct context
+                with bpy.context.temp_override(**override):
+                    bpy.ops.sequencer.view_all()
+                break
 
 
    
@@ -365,12 +405,23 @@ class ImportSomeData(Operator, ImportHelper):
         options={'HIDDEN'},
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
+    #Setting_variables
+    create_3d_Objects_var = False
+    import_type = None
 
     csv_row_start: IntProperty(name="Start at Row", default=0)
     csv_row_end: IntProperty(name="End at Row", default=100)
-
+    channel_to_import_to: IntProperty(name="Channel to import to", default=10, description="Choose the channel to begin import too, if it contains multiple days they will decend")
+    
+    is_actipass_data: BoolProperty(name="ActiPass", default=False)
     create_3d_Objects: BoolProperty(name="Create 3d objects", default=False)
 
+    
+
+        
+
+    
+    
     type: EnumProperty(
         name="File FPS",
         description="Choose FPS for import",
@@ -387,6 +438,23 @@ class ImportSomeData(Operator, ImportHelper):
         ),
         default='OPT_A',
     )
+    
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, 'channel_to_import_to')
+
+        #TODO: ADD other potential settings
+
+        layout.prop(self, 'is_actipass_data')
+        
+        #If its actipass data
+        if self.is_actipass_data:
+            layout.prop(self, 'create_3d_Objects')
+            layout.prop(self, 'csv_row_start')
+            layout.prop(self, 'csv_row_end')
+            self.import_type = Constants.IMPORT_ACTIPASS
+            if self.create_3d_Objects:
+                self.create_3d_Objects_var = True
 
     def execute(self, context):
-        return read_some_data(context, self.filepath, self.csv_row_start, self.csv_row_end, self.create_3d_Objects)
+        return read_some_data(context, self.filepath, self.csv_row_start, self.csv_row_end, self.create_3d_Objects, self.channel_to_import_to, self.import_type)

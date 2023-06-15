@@ -6,6 +6,7 @@ class Constants:
     DUET_RIGHT = (2, 6, "DUET RIGHT")
     FREE_CHANNEL = (3, 7, "FC")
     
+    IMPORT_ACTIPASS = (1, "ActiPass")
 
     POSTURE = (3, 6, "POSTURE")
     EXPORT_TYPES = ["MASTER CLOCK", "DUET LEFT", "DUET RIGHT", "FREE CHANNEL"]
