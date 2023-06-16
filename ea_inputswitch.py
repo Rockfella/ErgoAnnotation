@@ -3,8 +3,8 @@ import bpy
 
 from .ea_duet_hotkey import onPressKeyZERO, onPressKeyONE, onPressKeyTWO, onPressKeyTHREE, onPressKeyFOUR, onPressKeyFIVE, onPressKeySIX, onPressKeySEVEN, onPressKeyEIGHT, onPressKeyNINE, onPressKeyTEN
 from .ea_duet_hotkey import onReleaseKeyZERO, onReleaseKeyONE, onReleaseKeyTWO, onReleaseKeyTHREE, onReleaseKeyFOUR, onReleaseKeyFIVE, onReleaseKeySIX, onReleaseKeySEVEN, onReleaseKeyEIGHT, onReleaseKeyNINE, onReleaseKeyTEN
-from .ea_free_channel_hotkeys import onPressKeyFreeChannelF
-from .ea_free_channel_hotkeys import onReleaseKeyFreeChannelF
+from .ea_free_channel_hotkeys import onPressKeyFreeChannel0, onPressKeyFreeChannel1, onPressKeyFreeChannel2, onPressKeyFreeChannel3, onPressKeyFreeChannel4, onPressKeyFreeChannel5, onPressKeyFreeChannel6, onPressKeyFreeChannel7, onPressKeyFreeChannel8, onPressKeyFreeChannel9
+from .ea_free_channel_hotkeys import onReleaseKeyFreeChannel0, onReleaseKeyFreeChannel1, onReleaseKeyFreeChannel2, onReleaseKeyFreeChannel3, onReleaseKeyFreeChannel4, onReleaseKeyFreeChannel5, onReleaseKeyFreeChannel6, onReleaseKeyFreeChannel7, onReleaseKeyFreeChannel8, onReleaseKeyFreeChannel9
 
 
 from .ea_constants import Constants
@@ -22,10 +22,12 @@ duet_hotkey_release_executions = (onReleaseKeyZERO, onReleaseKeyONE, onReleaseKe
 duet_hotkeys = ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR',
                 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN']
 
-free_channel_press_executions = [onPressKeyFreeChannelF]
-free_channel_release_executions = [onReleaseKeyFreeChannelF]
+free_channel_press_executions = [onPressKeyFreeChannel0, onPressKeyFreeChannel1, onPressKeyFreeChannel2, onPressKeyFreeChannel3,
+                                 onPressKeyFreeChannel4, onPressKeyFreeChannel5, onPressKeyFreeChannel6, onPressKeyFreeChannel7, onPressKeyFreeChannel8, onPressKeyFreeChannel9]
+free_channel_release_executions = [onReleaseKeyFreeChannel0, onReleaseKeyFreeChannel1, onReleaseKeyFreeChannel2, onReleaseKeyFreeChannel3, onReleaseKeyFreeChannel4, onReleaseKeyFreeChannel5, onReleaseKeyFreeChannel6, onReleaseKeyFreeChannel7, onReleaseKeyFreeChannel8, onReleaseKeyFreeChannel9]
 
-free_channel_hotkeys = ['F']
+free_channel_hotkeys = ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR',
+                        'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE']
 
 
 

@@ -4,7 +4,7 @@ from bpy.types import Operator
 from bpy.types import Sequence
 from .ea_constants import Constants
 
-from .ea_constants import pickTagColorForDuet, pickVisualTextColorForDuet
+from .ea_constants import pickTagColorForDuet, pickVisualTextColorForDuet, get_slot_value
 # Add the active_input property to bpy.types.Scene
 # bpy.types.Scene.active_input = bpy.props.IntProperty(name="Active Input", default=1)
 
@@ -153,16 +153,17 @@ class SEQUENCER_MT_custom_menu(bpy.types.Menu):
                     
                 for operator in CreatedOperatorsFreeChannel.created_operators_for_free_channel:
                     if limited_loop <= slots_to_show:
-                        layout.operator(operator.bl_idname, text=get_slot_value(context, limited_loop))
+                        layout.operator(operator.bl_idname, text=get_slot_value(
+                            context, limited_loop))
                         limited_loop += 1
                     else:
                         break
                     
             
-def get_slot_value(context, index):
-    addon_prefs = context.preferences.addons[__package__].preferences
-    free_channel_vars = addon_prefs.free_channel_vars
-    # Access the slot using the provided index
-    slot_key = f"slot_{index}"
-    slot_value = getattr(free_channel_vars, slot_key)
-    return str(slot_value)
+#def get_slot_value(context, index):
+#    addon_prefs = context.preferences.addons[__package__].preferences
+#    free_channel_vars = addon_prefs.free_channel_vars
+#    # Access the slot using the provided index
+#    slot_key = f"slot_{index}"
+#    slot_value = getattr(free_channel_vars, slot_key)
+#    return str(slot_value)

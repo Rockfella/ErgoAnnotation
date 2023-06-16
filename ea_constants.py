@@ -119,3 +119,12 @@ def frame_from_smpte(smpte_timecode: str, fps=None, fps_base=None) -> int:
     # print(hours_seconds_frames, minutes_seconds_frames,
     #      seconds_frames, frames_frames)
     return total_frames
+
+
+def get_slot_value(context, index):
+    addon_prefs = context.preferences.addons[__package__].preferences
+    free_channel_vars = addon_prefs.free_channel_vars
+    # Access the slot using the provided index
+    slot_key = f"slot_{index}"
+    slot_value = getattr(free_channel_vars, slot_key)
+    return str(slot_value)

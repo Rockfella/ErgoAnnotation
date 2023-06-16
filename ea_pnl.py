@@ -87,7 +87,11 @@ class EA_PT_Panel_Free_Channel(Panel):
             
                 row_next = layout.row()
                 split = row_next.split(factor=1.0)
-                prop_ui = split.prop(free_channel_vars, key, text=str(loop_index + 1),
+                if (loop_index + 1) < 10:
+                    prop_ui = split.prop(free_channel_vars, key, text='NUM ' + str(loop_index),
+                                         expand=True)
+                else:
+                    prop_ui = split.prop(free_channel_vars, key, text=str(loop_index),
                                          expand=True)
                 current_value = getattr(free_channel_vars, key)
                     
