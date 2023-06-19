@@ -461,7 +461,7 @@ def executeTheReleaseFromKey(self, context, key):
 
     # If we ever need markers
     # scene.timeline_markers.new(num_markers_str, frame=current_frame)
-
+    print("EXECUTED RELEASE")
     # Stop the drag of the sequence
     if auto_drag_strip in bpy.app.handlers.frame_change_post:
         bpy.app.handlers.frame_change_post.remove(auto_drag_strip)
@@ -469,7 +469,7 @@ def executeTheReleaseFromKey(self, context, key):
 
 
 def auto_drag_strip(scene, depsgraph):
-    print("DRAGGING")
+    #print("DRAGGING")
     scene = bpy.context.scene
 
     current_frame = bpy.context.scene.frame_current

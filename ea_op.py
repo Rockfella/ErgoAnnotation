@@ -8,6 +8,34 @@ from .ea_global_variables import SavePreferencesOperator
 
 from .ea_constants import frame_from_smpte
 
+from .ea_duet_hotkey import auto_drag_strip
+
+
+class EA_OT_MouseClick(bpy.types.Operator):
+    bl_idname = "object.mouse_click"
+    bl_label = "Tool Name"
+
+    def modal(self, context, event):
+        if event.type == 'LEFTMOUSE':  # Apply
+            if event.value == 'RELEASE':
+                print("Mouse Released!")
+
+                if auto_drag_strip in bpy.app.handlers.frame_change_post:
+                    bpy.app.handlers.frame_change_post.remove(auto_drag_strip)
+                return {'FINISHED'}
+        elif event.type in {'RIGHTMOUSE', 'ESC'}:  # Cancel
+            return {'CANCELLED'}
+
+        return {'RUNNING_MODAL'}
+
+    def invoke(self, context, event):
+        #print("Mouse Pressed!")
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
+
+    def execute(self, context):
+        return {'RUNNING_MODAL'}
+
 
 class MY_OT_SaveAllPreferences(bpy.types.Operator):
     bl_idname = "my.preferencesavecall"

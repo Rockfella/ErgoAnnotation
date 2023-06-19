@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Johan Sleman",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (0, 0, 2),
+    "version" : (0, 0, 6),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
@@ -37,7 +37,7 @@ from bpy.types import (Panel,
                        PropertyGroup,
                        )
 
-from . ea_op import EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_OT_FREE_CHANNEL_Button, MY_OT_SaveAllPreferences, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton
+from . ea_op import EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_OT_FREE_CHANNEL_Button, MY_OT_SaveAllPreferences, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton, EA_OT_MouseClick
 
 from . ea_pnl import EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export, EA_PT_Panel_Free_Channel, EA_PT_Panel_Video_Import, EA_PT_Panel_Import
 
@@ -54,7 +54,7 @@ from .ea_constants import frame_from_smpte
 
 #Regular classes
 classes = (EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_FREE_CHANNEL_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export,
-           ExportSomeData, ImportSomeData, SEQUENCER_MT_custom_menu, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton, EA_PT_Panel_Import)
+           ExportSomeData, ImportSomeData, SEQUENCER_MT_custom_menu, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton, EA_PT_Panel_Import, EA_OT_MouseClick)
 def register():
 
     bpy.types.Scene.master_time = bpy.props.StringProperty(name="master_time", default="00:00:00:00")
@@ -95,7 +95,7 @@ def register():
 
     
     bpy.types.SEQUENCER_MT_context_menu.append(custom_menu_func)
-
+    bpy.context.window_manager.keyconfigs.addon.keymaps.new(name="Window", space_type='EMPTY').keymap_items.new(EA_OT_MouseClick.bl_idname, 'LEFTMOUSE', 'PRESS')
 
 @persistent
 def load_handler(dummy):
@@ -122,7 +122,7 @@ def unregister():
 
 
     bpy.types.SEQUENCER_MT_context_menu.remove(custom_menu_func)
-
+    bpy.context.window_manager.keyconfigs.addon.keymaps['Window'].keymap_items.remove(bpy.context.window_manager.keyconfigs.addon.keymaps['Window'].keymap_items[EA_OT_MouseClick.bl_idname])
 
 
 
