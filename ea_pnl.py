@@ -87,8 +87,32 @@ class EA_PT_Panel_Free_Channel(Panel):
             
                 row_next = layout.row()
                 split = row_next.split(factor=1.0)
-                if (loop_index + 1) < 10:
-                    prop_ui = split.prop(free_channel_vars, key, text='NUM ' + str(loop_index),
+                if (loop_index + 1) <= 10:
+                    default = str('SEQUENCE_COLOR_0')
+                    loop_index_str = str(loop_index + 1)
+                    iconstr = default + loop_index_str
+
+                    if (loop_index + 1) == 1:
+                        iconstr = str('SEQUENCE_COLOR_01')
+                    elif (loop_index + 1) == 2:
+                        iconstr = str('SEQUENCE_COLOR_02')
+                    elif (loop_index + 1) == 3:
+                        iconstr = str('SEQUENCE_COLOR_03')
+                    elif (loop_index + 1) == 4:
+                        iconstr = str('SEQUENCE_COLOR_04')
+                    elif (loop_index + 1) == 5:
+                        iconstr = str('SEQUENCE_COLOR_05')
+                    elif (loop_index + 1) == 6:
+                        iconstr = str('SEQUENCE_COLOR_06')
+                    elif (loop_index + 1) == 7:
+                        iconstr = str('SEQUENCE_COLOR_07')
+                    elif (loop_index + 1) == 8:
+                        iconstr = str('SEQUENCE_COLOR_08')
+                    elif (loop_index + 1) >= 10:
+                        iconstr = str('SEQUENCE_COLOR_04')
+
+
+                    prop_ui = split.prop(free_channel_vars, key, text='NUM ' + str(loop_index), icon= iconstr,
                                          expand=True)
                 else:
                     prop_ui = split.prop(free_channel_vars, key, text=str(loop_index),

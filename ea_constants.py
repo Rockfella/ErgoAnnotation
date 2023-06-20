@@ -67,6 +67,38 @@ def pickTagColorForDuet(key):
         return color_array[3]  # green
 
 
+def pickTagColorForFreeMode(key):
+
+    # ColorTag for num hotkeys
+    int_key = int(key)
+
+    color_array = ["COLOR_01", "COLOR_02", "COLOR_03", "COLOR_04", "COLOR_05", "COLOR_06", "COLOR_07", "COLOR_08", "COLOR_09"]
+
+    if int_key == 0:
+        return color_array[0]  
+    elif int_key == 1:
+        return color_array[1]  
+    elif int_key == 2:
+        return color_array[2]
+    elif int_key == 3:
+        return color_array[3]
+    elif int_key == 4:
+        return color_array[4]
+    elif int_key == 5:
+        return color_array[5]
+    elif int_key == 6:
+        return color_array[6]
+    elif int_key == 7:
+        return color_array[7]
+    elif int_key == 8:
+        return color_array[8]
+    elif int_key == 9:
+        return color_array[3]
+
+    else:
+        return color_array[3]  # green
+
+
 def pickVisualTextColorForDuet(key):
 
     # ColorTag for num hotkeys
@@ -87,6 +119,38 @@ def pickVisualTextColorForDuet(key):
 
     else:
         return (0.48, 0.80, 0.48, 1.00)  # green
+    
+
+def pickVisualTextColorForFreeMode(key):
+
+    # ColorTag for num hotkeys
+    int_key = int(key)
+
+    if int_key == 0:
+        return (0.88, 0.38, 0.36, 1.00)  # red
+    elif int_key == 1:
+        return (0.94, 0.64, 0.33, 1.00)  # orange
+    elif int_key == 2:
+        return (0.94, 0.86, 0.33, 1.00)  # yellow
+    elif int_key == 3:
+        return (0.48, 0.80, 0.48, 1.00)  # green
+    elif int_key == 4:
+        return (0.36, 0.71, 0.91, 1.00)  # blue
+    elif int_key == 5:
+        return (0.55, 0.35, 0.85, 1.00)  # purple
+    elif int_key == 6:
+        return (0.77, 0.45, 0.72, 1.00)  # pink
+    elif int_key == 7:
+        return (0.47, 0.33, 0.25, 1.00)  # brown
+    elif int_key == 8:
+        return (0.37, 0.37, 0.37, 1.00)  # gray
+    elif int_key == 9:
+        return (0.48, 0.80, 0.48, 1.00)   # green
+
+    else:
+        return (0.48, 0.80, 0.48, 1.00)  # green
+
+
 
 
 def frame_from_smpte(smpte_timecode: str, fps=None, fps_base=None) -> int:

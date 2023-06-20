@@ -4,7 +4,7 @@ from bpy.types import Operator
 from bpy.types import Sequence
 from .ea_constants import Constants
 
-from .ea_constants import pickTagColorForDuet, pickVisualTextColorForDuet, get_slot_value
+from .ea_constants import pickTagColorForDuet, pickVisualTextColorForDuet, get_slot_value, pickVisualTextColorForFreeMode, pickTagColorForFreeMode
 # Add the active_input property to bpy.types.Scene
 # bpy.types.Scene.active_input = bpy.props.IntProperty(name="Active Input", default=1)
 
@@ -60,10 +60,11 @@ def execute_operator(IntValue):
 
 
                 active_strip.name = str(old_input_type) + ", " + str(newValue) + "," + str(old_indput_id) + ", " + str(datetime.datetime.now())
-                
+                active_strip.color_tag = pickTagColorForFreeMode(IntValue)
                 if hasattr(active_strip, "text"):
                     active_strip.text = str(
-                        old_input_type) + ", " + str(newValue) + "," + str(old_indput_id)
+                        old_input_type) + ", " + str(newValue) 
+                    active_strip.color = pickVisualTextColorForFreeMode(IntValue)
                     
 
 

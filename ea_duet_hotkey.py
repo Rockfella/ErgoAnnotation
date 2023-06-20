@@ -4,7 +4,7 @@ import time
 import datetime
 from bpy.types import Operator
 from .ea_constants import Constants
-from .ea_constants import pickTagColorForDuet, pickVisualTextColorForDuet, get_slot_value
+from .ea_constants import pickTagColorForDuet, pickVisualTextColorForDuet, get_slot_value, pickVisualTextColorForFreeMode, pickTagColorForFreeMode
 
 # ------------------------------------------------------------------------
 #    HOTKEY: ZERO
@@ -383,8 +383,8 @@ def executeThePressFromKey(self, context, key):
         current_input_channel = Constants.FREE_CHANNEL[1]
         text_strip_visual_text = current_input_str + ", " + get_slot_value(context, key)
         text_strip_visual_location = (0.05, 0.32)
-        choosen_tag_color = "COLOR_05"
-        text_strip_visual_color = (0.36, 0.71, 0.92, 1.00)
+        choosen_tag_color = pickTagColorForFreeMode(key)
+        text_strip_visual_color = pickVisualTextColorForFreeMode(key)
 
 
     time_now = datetime.datetime.now()

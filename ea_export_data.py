@@ -117,6 +117,7 @@ class ExportSomeData(Operator, ExportHelper):
         name="Example Boolean",
         description="Example Tooltip",
         default=True,
+        options={'HIDDEN'},
     )
 
     type: EnumProperty(
@@ -127,6 +128,7 @@ class ExportSomeData(Operator, ExportHelper):
             ('OPT_B', "Second Option", "Description two"),
         ),
         default='OPT_A',
+        options={'HIDDEN'},
     )
 
     def execute(self, context):
