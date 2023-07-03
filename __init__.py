@@ -51,9 +51,12 @@ from .ea_global_variables import FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences,
 
 from .ea_constants import frame_from_smpte
 
+from . ea_custom_speed_control import CustomPlaybackOperator
+from .ea_custom_speed_control import draw_header_func
+
 
 #Regular classes
-classes = (EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_FREE_CHANNEL_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export,
+classes = (CustomPlaybackOperator, EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_FREE_CHANNEL_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export,
            ExportSomeData, ImportSomeData, SEQUENCER_MT_custom_menu, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton, EA_PT_Panel_Import)
 def register():
 
@@ -80,6 +83,15 @@ def register():
     bpy.types.WindowManager.free_channel_operator_toggle = bpy.props.BoolProperty(
         default=False,
         update=update_function_free_channel_operator_toggle)
+    
+    bpy.types.Scene.playback_speed_factor = bpy.props.FloatProperty(
+        name="Playback Speed Factor",
+        default=1.0,
+        min=0.1,
+        max=10.0
+    )
+    # Append draw function to the SEQUENCER_HT_header draw function
+    bpy.types.SEQUENCER_HT_header.append(draw_header_func)
 
 
 
@@ -114,6 +126,10 @@ def unregister():
     
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
+
+    del bpy.types.Scene.playback_speed_factor
+    # Remove draw function from the SEQUENCER_HT_header draw function
+    bpy.types.SEQUENCER_HT_header.remove(draw_header_func)
 
     for c in classes:
        
