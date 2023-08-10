@@ -7,6 +7,7 @@ class Constants:
     FREE_CHANNEL = (3, 7, "FC")
     
     IMPORT_ACTIPASS = (1, "ActiPass")
+    IMPORT_EMG = (2, "EMG")
 
     POSTURE = (3, 6, "POSTURE")
     EXPORT_TYPES = ["MASTER CLOCK", "DUET LEFT", "DUET RIGHT", "FREE CHANNEL"]

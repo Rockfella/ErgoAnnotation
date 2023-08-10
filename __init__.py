@@ -24,7 +24,7 @@ bl_info = {
 
 import bpy
 from bpy.app.handlers import persistent
-
+from . ea_pnl import EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Free_Channel, EA_PT_Panel_Video_Import, EA_PT_Panel_Import, EA_PT_Panel_Export
 
 from bpy.props import (StringProperty,
                        BoolProperty,
@@ -39,7 +39,6 @@ from bpy.types import (Panel,
 
 from . ea_op import EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_OT_FREE_CHANNEL_Button, MY_OT_SaveAllPreferences, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton
 
-from . ea_pnl import EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export, EA_PT_Panel_Free_Channel, EA_PT_Panel_Video_Import, EA_PT_Panel_Import
 
 from . ea_export_data import ExportSomeData
 from . ea_import_data import ImportSomeData
@@ -56,10 +55,10 @@ from .ea_custom_speed_control import draw_header_func
 
 
 #Regular classes
-classes = (CustomPlaybackOperator, EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_FREE_CHANNEL_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_PT_Panel, EA_PT_Panel_Inputs, EA_PT_Panel_Export,
-           ExportSomeData, ImportSomeData, SEQUENCER_MT_custom_menu, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton, EA_PT_Panel_Import)
+classes = (CustomPlaybackOperator, EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_FREE_CHANNEL_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_PT_Panel, EA_PT_Panel_Inputs,
+           ExportSomeData, ImportSomeData, SEQUENCER_MT_custom_menu, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton, EA_PT_Panel_Import, EA_PT_Panel_Export)
 def register():
-
+    setup_custom_keymaps()
     bpy.types.Scene.master_time = bpy.props.StringProperty(name="master_time", default="00:00:00:00")
     bpy.types.Scene.master_time_frame = bpy.props.IntProperty(name="master_time_frame")
     bpy.types.Scene.master_time_adaption = bpy.props.StringProperty(
@@ -79,16 +78,23 @@ def register():
         default=False,
         update=update_function_duet_right_operator_toggle)
     
+    
     # Button toggles for each input
     bpy.types.WindowManager.free_channel_operator_toggle = bpy.props.BoolProperty(
         default=False,
         update=update_function_free_channel_operator_toggle)
     
-    bpy.types.Scene.playback_speed_factor = bpy.props.FloatProperty(
+    # TODO: REMOVE THIS IF UN-USED
+    # Button toggles awwor speed
+    bpy.types.WindowManager.speed_control_operator_toggle = bpy.props.BoolProperty(
+        default=False,)
+
+    # TODO: REMOVE THIS IF UN-USED
+    bpy.types.Scene.playback_speed_factor = bpy.props.IntProperty(
         name="Playback Speed Factor",
-        default=1.0,
-        min=0.1,
-        max=10.0
+        default=1,
+        min=1,
+        max=100
     )
     # Append draw function to the SEQUENCER_HT_header draw function
     bpy.types.SEQUENCER_HT_header.append(draw_header_func)
@@ -116,6 +122,7 @@ def load_handler(dummy):
 
 
 def unregister():
+    remove_custom_keymaps()
     del bpy.types.Scene.master_time
     del bpy.types.Scene.master_time_adaption
     del bpy.types.Scene.master_time_frame
@@ -123,7 +130,7 @@ def unregister():
     del bpy.types.WindowManager.duet_left_operator_toggle
     del bpy.types.WindowManager.duet_right_operator_toggle
     del bpy.types.WindowManager.free_channel_operator_toggle
-    
+    del bpy.types.WindowManager.speed_control_operator_toggle
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
 
@@ -161,6 +168,14 @@ def update_function_free_channel_operator_toggle(self, context):
         first = bpy.ops.myaddon
 
         first.free_channel_operator_toggle('INVOKE_DEFAULT')
+    return
+
+
+def update_function_speed_control_operator_toggle(self, context):
+    if self.speed_control_operator_toggle:
+        first = bpy.ops.myaddon
+
+        first.speed_control_operator_toggle('INVOKE_DEFAULT')
     return
 
 # Only needed if you want to add into a dynamic menu
@@ -206,3 +221,43 @@ def meta_text_handler(scene, depsgraph):
 def custom_menu_func(self, context):
     layout = self.layout
     layout.menu(SEQUENCER_MT_custom_menu.bl_idname)
+
+
+# Global variable to store keymap items
+addon_keymaps = []
+
+
+def setup_custom_keymaps():
+    wm = bpy.context.window_manager
+    kc = wm.keyconfigs.addon
+
+    # Access the "Frames" keymaps or create if it doesn't exist
+    km = kc.keymaps.get('Frames', None)
+    if not km:
+        km = kc.keymaps.new(name='Frames', space_type='EMPTY')
+
+    # Remove default keymap entries for up and down arrows with screen.keyframe_jump
+    km_items_to_remove = [kmi for kmi in km.keymap_items if kmi.type in {
+        'UP_ARROW', 'DOWN_ARROW'} and kmi.idname == 'screen.keyframe_jump']
+    for kmi in km_items_to_remove:
+        km.keymap_items.remove(kmi)
+
+    # Add new keymap entries for up and down arrows with screen.frame_offset
+    kmi = km.keymap_items.new(
+        'screen.frame_offset', type='UP_ARROW', value='PRESS', shift=False, ctrl=False)
+    kmi.properties.delta = 10
+    kmi.repeat = True
+    addon_keymaps.append((km, kmi))
+
+    kmi = km.keymap_items.new(
+        'screen.frame_offset', type='DOWN_ARROW', value='PRESS', shift=False, ctrl=False)
+    kmi.properties.delta = -10
+    kmi.repeat = True
+    addon_keymaps.append((km, kmi))
+
+
+def remove_custom_keymaps():
+    # Remove the added keymap items
+    for km, kmi in addon_keymaps:
+        km.keymap_items.remove(kmi)
+    addon_keymaps.clear()

@@ -4,97 +4,110 @@ from bpy_extras.io_utils import ExportHelper
 import bpy
 import csv
 from .ea_constants import Constants
-
+from .ea_constants import frame_from_smpte
 
 def write_some_data(context, filepath, use_some_setting):
     print("running write_some_data...")
 
-    # Example mockup data
-    data = []
-    data.append(Constants.EXPORT_TYPES)
-    #data.append([10, 20])
-    #data.append([30, 40])
+    scene = bpy.context.scene
 
+    # Cache the sequence strips
+    sequence_strips = list(scene.sequence_editor.sequences)
+
+    
+    # MASTER TIME LIST
     data_master_clock = []
-    data_DUET_L = []
-    data_DUET_R = []
+    # Projected frames from master clock
+    calc_master_frame = bpy.data.scenes[bpy.context.scene.name].master_time_frame
+    calc_master_time = bpy.data.scenes[bpy.context.scene.name].master_time
+
+    frames_from_master_clock = frame_from_smpte(calc_master_time)
+
+    fps = bpy.context.scene.render.fps
+    fps_base = bpy.context.scene.render.fps_base
+    fps_real = fps / fps_base
+    
+    #Creating a list based of the master clock 
+    for frame in range(scene.frame_start, scene.frame_end + 1):
+        # Input SMPTE formatted string
+        smpte_string_current = bpy.utils.smpte_from_frame(
+        (frame + frames_from_master_clock - calc_master_frame), fps=fps, fps_base=fps_base)
+        data_master_clock.append(smpte_string_current)
+    
+    
+
+    # Building a list of strips with their range and append them to the right dict
+    sir_data_DUET_L = []
+    sir_data_DUET_R = []
+    sir_data_FREE_CHANNEL = []
+    for strip in sequence_strips:
+        filter_name = strip.name.split(',')
+        if strip.type == 'TEXT' and filter_name[0]:
+            start_frame = int(strip.frame_start)
+            end_frame = start_frame + int(strip.frame_final_duration)
+            filter_name = strip.name.split(',')
+
+            #Sort the strip.names into the right cathegories 
+            if filter_name[0] == Constants.DUET_LEFT[2]:
+                sir_data_DUET_L.append(
+                    (start_frame, end_frame, filter_name[1]))
+
+            elif filter_name[0] == Constants.DUET_RIGHT[2]:
+               sir_data_DUET_R.append((start_frame, end_frame, filter_name[1]))
+                   
+            elif filter_name[0] == Constants.FREE_CHANNEL[2]:
+               sir_data_FREE_CHANNEL.append(
+                   (start_frame, end_frame, filter_name[1]))
+                   
+            
+    # Sort the list by start_frame
+    sir_data_DUET_L.sort()
+    sir_data_DUET_R.sort()
+    sir_data_FREE_CHANNEL.sort()
+
+    # Building a dictionary of active strips for each frame
+    active_strips_data_DUET_L = {}
+    active_strips_data_DUET_R = {}
+    active_strips_data_FREE_CHANNEL = {}
+    for frame in range(scene.frame_start, scene.frame_end + 1):
+        active_strips_data_DUET_L[frame] = [name for start, end,
+                                name in sir_data_DUET_L if start <= frame < end]
+        active_strips_data_DUET_R[frame] = [name for start, end,
+                                            name in sir_data_DUET_R if start <= frame < end]
+        active_strips_data_FREE_CHANNEL[frame] = [name for start, end,
+                                                  name in sir_data_FREE_CHANNEL if start <= frame < end]
+
+    data_data_DUET_L = []
+    data_data_DUET_R = []
     data_FREE_CHANNEL = []
 
-    scene = bpy.context.scene
-    # Store the current frame to restore it later
-    current_frame = scene.frame_current
+    for frame, strips in active_strips_data_DUET_L.items(): 
+        data_data_DUET_L.append(strips)
+    
+    for frame, strips in active_strips_data_DUET_R.items():
+        data_data_DUET_R.append(strips)
+    
+    for frame, strips in active_strips_data_FREE_CHANNEL.items():
+        data_FREE_CHANNEL.append(strips)
 
-    # Iterate through each frame in the scene
-    for frame in range(scene.frame_start, scene.frame_end + 1):
-        # Set the current frame to the frame in the loop
-        scene.frame_set(frame)
-        # Print the frame number
-        is_in_range_data_DUET_L = False
-        is_in_range_data_DUET_R = False
-        is_in_range_data_FREE_CHANNEL = False
-        for strip in scene.sequence_editor.sequences:
-            if strip.type == 'TEXT':
-               
-                if strip.name == '@master.time':
-                    data_master_clock.append(strip.text)
-
-                filter_name = strip.name.split(',')
-                strip_range_start = strip.frame_final_start
-                strip_range_end = (strip_range_start + strip.frame_final_duration) - 1 # -1 to make sure it does not include the end frame
-
-                if strip_range_start <= frame <= strip_range_end:
-
-                    if filter_name[0] == Constants.DUET_LEFT[2]:
-                        data_DUET_L.append(filter_name[1])
-                        is_in_range_data_DUET_L = True
-
-                    elif filter_name[0] == Constants.DUET_RIGHT[2]:
-                        data_DUET_R.append(filter_name[1])
-                        is_in_range_data_DUET_R = True
-
-                    elif filter_name[0] == Constants.FREE_CHANNEL[2]:
-                        data_FREE_CHANNEL.append(filter_name[1])
-                        is_in_range_data_FREE_CHANNEL = True
-
-        if is_in_range_data_DUET_L == False:
-            data_DUET_L.append(-1)
-        if is_in_range_data_DUET_R == False:
-            data_DUET_R.append(-1)
-        if is_in_range_data_FREE_CHANNEL == False:
-            data_FREE_CHANNEL.append(-1)
-                    
-
-    index = 0   
-    for d in data_master_clock:
-        
-        data.append([data_master_clock[index],
-                    data_DUET_L[index], data_DUET_R[index], data_FREE_CHANNEL[index]])
-
-        index += 1
-        # print("Frame number:", frame)
-
-    # Restore the original frame
-    scene.frame_set(current_frame)
+    #Combine all lists into a dict that speeds up the csv export
+    data = {
+        "master_clock": data_master_clock,
+        "DUET_L": data_data_DUET_L,
+        "DUET_R": data_data_DUET_R,
+        "FREE_CHANNEL": data_FREE_CHANNEL
+    }
 
 
-
-
-
-
-
-
-
-
+    #Save to csv file
     with open(filepath, 'w', encoding='utf-8', newline='') as f:
-        writer = csv.writer(f)
-        for row in data:
+        writer = csv.DictWriter(f, fieldnames=data.keys())
+        writer.writeheader()
+        for i in range(len(data_master_clock)):
+            row = {key: values[i] for key, values in data.items()}
             writer.writerow(row)
 
     return {'FINISHED'}
-
-
-# ExportHelper is a helper class, defines filename and
-# invoke() function which calls the file selector.
 
 
 class ExportSomeData(Operator, ExportHelper):
