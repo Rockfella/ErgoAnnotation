@@ -13,6 +13,13 @@ from .ea_constants import pickTagColorForDuet, pickVisualTextColorForDuet, get_s
 
 # Define the custom operators for options A-C
 
+
+def show_warning(message):
+    def draw(self, context):
+        self.layout.label(text=message)
+
+    bpy.context.window_manager.popup_menu(draw, title="Warning", icon='ERROR')
+
 operators_info_DUET = Constants.str_OMNI_RES
 
 
@@ -21,50 +28,65 @@ def execute_operator(IntValue):
         print(f"Executing operator: {IntValue}")
 
         active_strip = context.scene.sequence_editor.active_strip
-        
+       
+        selected_strips = [strip for strip in bpy.context.scene.sequence_editor.sequences_all if strip.select]
+
+        #for strip in selected_strips:
+            #print(strip.name)
         #This one changes below, if its freeChannel input
         newValue = IntValue
         
+        if len(selected_strips) > 1:
+            #show_warning("More than one strip was selected, ctrl + z to restore")
+            self.report(
+                {'WARNING'}, "More than one strip was selected, ctrl + z to restore")
         
+        if len(selected_strips) > 0:
+            for strip in selected_strips:
+                print(strip.name)
+                old_input_str = strip.name.split(",")
+                old_input_type, old_indput_value, old_indput_id, old_input_date = old_input_str[
+                    0], old_input_str[1], old_input_str[2], old_input_str[3]
 
-        if active_strip:
+                if old_input_type == Constants.DUET_LEFT[2]:
 
-            old_input_str = active_strip.name.split(",")
-            old_input_type, old_indput_value, old_indput_id, old_input_date = old_input_str[
-            0], old_input_str[1], old_input_str[2], old_input_str[3]
-           
-            if old_input_type == Constants.DUET_LEFT[2]:
-                
-                active_strip.name = str(old_input_type) + ", " +  str(newValue) + "," + str(old_indput_id) + ", " + str(datetime.datetime.now())
-                active_strip.color_tag = pickTagColorForDuet(newValue)
+                    strip.name = str(old_input_type) + ", " + str(newValue) + "," + str(
+                        old_indput_id) + ", " + str(datetime.datetime.now())
+                    strip.color_tag = pickTagColorForDuet(newValue)
 
-                if hasattr(active_strip, "text"):
-                    active_strip.text = str(old_input_type) + " OMNI-RES:" + str(newValue) 
-                    active_strip.color = pickVisualTextColorForDuet(newValue)
+                    if hasattr(strip, "text"):
+                        strip.text = str(
+                            old_input_type) + " OMNI-RES:" + str(newValue)
+                        strip.color = pickVisualTextColorForDuet(newValue)
 
-            elif old_input_type == Constants.DUET_RIGHT[2]:
-                
-                active_strip.name = str(old_input_type) + ", " + str(newValue) + "," + str(
-                    old_indput_id) + ", " + str(datetime.datetime.now())
-                active_strip.color_tag = pickTagColorForDuet(newValue)
+                elif old_input_type == Constants.DUET_RIGHT[2]:
 
-                if hasattr(active_strip, "text"):
-                    active_strip.text = str(
-                        old_input_type) + " OMNI-RES:" + str(newValue)
-                    active_strip.color = pickVisualTextColorForDuet(newValue)
+                    strip.name = str(old_input_type) + ", " + str(newValue) + "," + str(
+                        old_indput_id) + ", " + str(datetime.datetime.now())
+                    strip.color_tag = pickTagColorForDuet(newValue)
 
-            elif old_input_type == Constants.FREE_CHANNEL[2]:
+                    if hasattr(strip, "text"):
+                        strip.text = str(
+                            old_input_type) + " OMNI-RES:" + str(newValue)
+                        strip.color = pickVisualTextColorForDuet(newValue)
 
-                #Instead of using the IntValue, we get the AddonPreference value that is stored.
-                newValue = get_slot_value(context, IntValue)
+                elif old_input_type == Constants.FREE_CHANNEL[2]:
 
+                    # Instead of using the IntValue, we get the AddonPreference value that is stored.
+                    newValue = get_slot_value(context, IntValue)
 
-                active_strip.name = str(old_input_type) + ", " + str(newValue) + "," + str(old_indput_id) + ", " + str(datetime.datetime.now())
-                active_strip.color_tag = pickTagColorForFreeMode(IntValue)
-                if hasattr(active_strip, "text"):
-                    active_strip.text = str(
-                        old_input_type) + ", " + str(newValue) 
-                    active_strip.color = pickVisualTextColorForFreeMode(IntValue)
+                    strip.name = str(old_input_type) + ", " + str(newValue) + "," + str(
+                        old_indput_id) + ", " + str(datetime.datetime.now())
+                    strip.color_tag = pickTagColorForFreeMode(IntValue)
+                    if hasattr(strip, "text"):
+                        strip.text = str(
+                            old_input_type) + ", " + str(newValue)
+                        strip.color = pickVisualTextColorForFreeMode(
+                            IntValue)
+
+            
+
+    
                     
 
 
@@ -116,7 +138,7 @@ for i in range(20):
 
 
 class SEQUENCER_MT_custom_menu(bpy.types.Menu):
-    bl_label = "ERGOANNOTATION"
+    bl_label = "Edit Annotation"
     bl_idname = "SEQUENCER_MT_custom_menu"
 
    
@@ -126,10 +148,34 @@ class SEQUENCER_MT_custom_menu(bpy.types.Menu):
 
         layout = self.layout
         active_strip = context.scene.sequence_editor.active_strip if context.scene.sequence_editor else None
+        selected_strips = [
+            strip for strip in bpy.context.scene.sequence_editor.sequences_all if strip.select]
 
-        if active_strip:  # Check if any sequence is active
+        # Get the names of all selected strips
+        selected_names = [strip.name.split(",")[0]
+                          for strip in selected_strips]
+
+        # Check if all names are the same by converting the list to a set and checking its length
+        all_have_same_name = len(set(selected_names)) == 1
+
+        if all_have_same_name:
+            print("All selected strips have the same name.")
+        else:
+            print("Not all selected strips have the same name.")
+
+        #TODO: OK NOW WE CAN START BUILDING SO THAT IT ONLY WORKS IF THEY HAVE THE SAME NAME 
+
+        if not all_have_same_name:
+            #show_warning(
+              #   "Selected strips needs to be of the same kind")
+            #self.report(
+              #  {'WARNING'}, "Selected strips needs to be of the same kind")
+            layout.label(text='Selected strips needs to be of the same type')
+            return {'CANCELLED'}
+
+        if len(selected_strips) > 0:  # Check if any sequence is active
             # Get the first index of the sequence's name
-            first_index = active_strip.name.split(",")[0]
+            first_index = selected_strips[0].name.split(",")[0]
             print(first_index)
             if first_index == Constants.DUET_LEFT[2]:
 

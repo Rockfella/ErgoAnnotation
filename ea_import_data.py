@@ -955,9 +955,11 @@ class ImportSomeData(Operator, ImportHelper):
                  f'to 1 it´s currently set to: {bpy.context.scene.render.fps}',
                  'If not, the day´s will not be correct',]
         lines_emg= ['If the dateTime format is correct,',
+                    '(eg. 2023-02-20  10:36:00 in first column),',
                     'the master clock is used to synch the data.',
                     'If there is no masterclock added,',
-                    'it starts from frame 1'
+                    'it starts from frame 1.',
+                    'Atm. Only column 2 is imported'
                           ]
         
         if self.is_actipass_data:
