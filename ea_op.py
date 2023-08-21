@@ -10,7 +10,7 @@ from .ea_constants import frame_from_smpte
 
 from .ea_duet_hotkey import auto_drag_strip
 
-
+import os
 
 class MY_OT_SaveAllPreferences(bpy.types.Operator):
     bl_idname = "my.preferencesavecall"
@@ -30,7 +30,7 @@ class EA_OT_AdaptionInfoButton(bpy.types.Operator):
     """Tooltip for this operator"""
     bl_idname = "object.adaption_info_button"
     bl_label = "Adaption or Move"
-    bl_description = "The adapt time can be used align a clip to the master clock, in case when there are missing or additional frames. It can also be used to move a clip to a specific master clock position. To move a clip, please create a meta strip from audio and video, place a marker where in the video it should move from (Hotkey M), a Move button should appear"
+    bl_description = "The adapt time can be used to stretch or shrink a clip, in case when there are missing or additional frames. It can also be used to move a clip to a specific master clock position. To move a clip, please create a meta strip from audio and video, place a marker where in the video it should move from (Hotkey M), a Move button should appear"
 
     def execute(self, context):
         #bpy.ops.wm.url_open(url="https://github.com/Rockfella/ergolabs")
@@ -92,7 +92,7 @@ class MY_OT_CleanFreeChannelInput(bpy.types.Operator):
 
 class EA_OT_Master_Clock_Button(Operator):
     bl_idname = "myaddon.master_button_operator"
-    bl_label = "Set Master Clock"
+    bl_label = "Set Time"
     bl_description = "Sets the master clock to the frame selected in the timeline"
 
     def execute(self, context):
@@ -110,7 +110,7 @@ class EA_OT_Master_Clock_Button(Operator):
 
 class EA_OT_Master_Clock_Button_Adapt(Operator):
     bl_idname = "myaddon.master_button_operator_push"
-    bl_description = "Pushes the selected clip to the set master clock"
+    bl_description = "Shrinks or stretches the clip to master time"
     bl_label = "Looks like the adaption is large, still want to adapt?"
  
     def execute(self, context):
@@ -253,7 +253,25 @@ def calculate_execute_the_strip_move(self, context, justcalc):
 
             the_frame_change = initial_frame - actual_time_frame_from_pusher
 
-            
+
+            # Ensure the active strip is the one you're interested in
+            if seq_editor.active_strip and seq_editor.active_strip.type == 'MOVIE':
+               # If it's not a meta strip, make it one
+               name_of_movie, ex = os.path.splitext(seq_editor.active_strip.name)
+               sound_file = f"{name_of_movie}.001"
+               sound_strip = next((strip for strip in seq_editor.sequences_all if strip.type ==
+                                  'SOUND' and strip.name == sound_file), None)
+
+               if sound_strip:
+                    # Deselect all strips
+                    for strip in seq_editor.sequences_all:
+                        strip.select = False    
+                    # Select only the movie and sound strips
+                    seq_editor.active_strip.select = True
+                    sound_strip.select = True
+
+                    # Create a meta strip from the selected strips
+                    bpy.ops.sequencer.meta_make()
 
             #Sends back a bool if the function only wanted to provide if the move is negative, see difference at def invoke
             if justcalc:

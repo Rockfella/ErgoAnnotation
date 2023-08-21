@@ -134,7 +134,18 @@ for i in range(20):
     loop_index += 1
 
 
+class SEQUENCER_OT_SetRangeToStrips(bpy.types.Operator):
+    bl_idname = "sequencer.set_range_to_strips_custom"
+    bl_label = "Set Range to Strip"
+    bl_description = "Set the scene's start and end frame to the selected strip"
 
+    @classmethod
+    def poll(cls, context):
+        return context.selected_sequences
+
+    def execute(self, context):
+        bpy.ops.sequencer.set_range_to_strips()
+        return {'FINISHED'}
 
 
 class SEQUENCER_MT_custom_menu(bpy.types.Menu):

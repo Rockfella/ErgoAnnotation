@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Johan Sleman",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (1, 0, 1),
+    "version" : (1, 0, 2),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
@@ -43,7 +43,7 @@ from . ea_op import EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUE
 from . ea_export_data import ExportSomeData
 from . ea_import_data import ImportSomeData
 
-from .ea_ot_right_click_handler import SEQUENCER_MT_custom_menu
+from .ea_ot_right_click_handler import SEQUENCER_MT_custom_menu, SEQUENCER_OT_SetRangeToStrips
 
 
 from .ea_global_variables import FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, SavePreferencesOperator
@@ -56,7 +56,7 @@ from .ea_custom_speed_control import draw_header_func
 
 #Regular classes
 classes = (CustomPlaybackOperator, EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_FREE_CHANNEL_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_PT_Panel, EA_PT_Panel_Inputs,
-           ExportSomeData, ImportSomeData, SEQUENCER_MT_custom_menu, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton, EA_PT_Panel_Import, EA_PT_Panel_Export)
+           ExportSomeData, ImportSomeData, SEQUENCER_MT_custom_menu, SEQUENCER_OT_SetRangeToStrips, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton, EA_PT_Panel_Import, EA_PT_Panel_Export)
 def register():
     setup_custom_keymaps()
     bpy.types.Scene.master_time = bpy.props.StringProperty(name="master_time", default="00:00:00:00")
@@ -119,6 +119,7 @@ def load_handler(dummy):
     bpy.app.handlers.frame_change_pre.clear()
     bpy.app.handlers.frame_change_pre.append(meta_text_handler)
     bpy.app.handlers.render_pre.append(meta_text_handler)
+    
 
 
 def unregister():
@@ -213,6 +214,9 @@ def meta_text_handler(scene, depsgraph):
 
                 strip.text = str(hours_curr) + ':' + str(minutes_curr) + \
                      ':' + str(seconds_curr) + '+' + str(frames_curr)
+                
+                "Keep the current time inside the adaptor"
+                bpy.data.scenes[bpy.context.scene.name].master_time_adaption = smpte_string_current
                  
 
 
@@ -221,7 +225,7 @@ def meta_text_handler(scene, depsgraph):
 def custom_menu_func(self, context):
     layout = self.layout
     layout.menu(SEQUENCER_MT_custom_menu.bl_idname)
-
+    layout.operator(SEQUENCER_OT_SetRangeToStrips.bl_idname)
 
 # Global variable to store keymap items
 addon_keymaps = []

@@ -7,7 +7,7 @@ from .ea_ot_right_click_handler import CreatedOperatorsFreeChannel
 
 
 class EA_PT_Panel(Panel):
-    bl_label = "Master Clock"
+    bl_label = "Master Time"
     bl_idname = "SEQUENCER_PT_my_addon_panel2"
     bl_space_type = 'SEQUENCE_EDITOR'
     bl_region_type = 'UI'
@@ -22,12 +22,19 @@ class EA_PT_Panel(Panel):
         markers = bpy.context.scene.timeline_markers
         # Add a button with a callback to the button_function
         #TODO: CONSIDER REMOVING THE ROUND FPS 
-        #layout.operator("myaddon.round_fps_button_operator")
-        layout.operator("myaddon.master_button_operator")
-        layout.prop(context.scene, "master_time", text="Time",
-                    expand=True)
+       # layout.operator("myaddon.round_fps_button_operator")
         scene = bpy.context.scene
+        if '@master.time' in (strip.name for strip in scene.sequence_editor.sequences_all if strip.type == 'TEXT'):
+            print("")
+        else:
+            layout.operator("myaddon.master_button_operator")
+            layout.prop(context.scene, "master_time", text="Time",
+                        expand=True)
+            
+        
+        
         for strip in scene.sequence_editor.sequences_all:
+              
             if strip.type == 'TEXT':
                 if strip.name == '@master.time':
 
@@ -40,19 +47,28 @@ class EA_PT_Panel(Panel):
                                  text="", icon='QUESTION')
                     
                     layout.operator(
-                        "myaddon.master_button_operator_push", text="Adapt Clip to Master Clock")
+                        "myaddon.master_button_operator_push", text="Stretch or Shrink to time")
                     
                     #A new option to move the strip according the the master time will pop up, if there is a meta strip selected and there is a marker placed within its range, that one will be used to move the strip according to master clock
-                    if seq_editor.active_strip:
+                   
+                    show_button = False
 
-                        if seq_editor.active_strip.type == 'META':
 
-                            for marker in markers:
-                                if seq_editor.active_strip.frame_final_start <= marker.frame <= seq_editor.active_strip.frame_final_end:
-                                
-                                    layout.operator(
-                                    "myaddon.master_button_operator_move", text="Move Clip")
-                
+                    for marker in markers:
+                        if seq_editor.active_strip.frame_final_start <= marker.frame <= seq_editor.active_strip.frame_final_end:
+                            show_button = True
+                            break  # No need to check further, we found a marker that matches the condition
+                        
+                    if show_button:
+                        if seq_editor.active_strip:
+                            layout.operator("myaddon.master_button_operator_move", text="Move to Time")
+                    else:
+                        layout.label(
+                            text="To enable move, please mark (Hotkey M)")
+                        layout.label(text="inside the movie clip you want to move")
+                   
+                   
+                   
 
 
 class EA_PT_Panel_Free_Channel(Panel):
