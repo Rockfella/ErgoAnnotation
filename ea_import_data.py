@@ -3,7 +3,7 @@ from bpy.props import StringProperty, BoolProperty, EnumProperty, FloatProperty,
 from bpy_extras.io_utils import ImportHelper
 import bpy
 import csv
-from .ea_constants import frame_from_smpte
+from .ea_constants import frame_from_smpte, pickTagColorForDuet
 import os
 from datetime import datetime, timedelta, time
 import re
@@ -11,172 +11,37 @@ import numpy as np
 
 import collections
 from .ea_constants import Constants
+from .ea_import_helper import decimal_percentage_to_range, move_to_lowest_channel, create3dObjects, move_strips_to_end_at, matlab_to_python_datetime, iso8601_to_python_datetime, downsample_data, detect_delimiter, is_iso8601, is_matlab_datetime, is_day_month_year, find_date_format, find_first_row_with_date, smpte_to_time, get_smtp_at_zero
 
 
-
-
-
-
-def move_strips_to_end_at(channel, end_frame):
-    print("Move strips to the end")
-    seqs = bpy.context.scene.sequence_editor.sequences
-    strips_on_channel = [s for s in seqs if s.channel == channel]
-
-    if not strips_on_channel:  # If there are no strips on the channel, exit the function
-        return
-
-    # Find the start frame of the first strip and the end frame of the last strip on the channel
-    start_frame = min(s.frame_start for s in strips_on_channel)
-    last_end_frame = max(s.frame_final_end for s in strips_on_channel)
-
-    # Calculate the difference between the desired end frame and the current last end frame
-    frame_diff = end_frame - last_end_frame
-
-    # Move all strips by the calculated difference
-    for strip in strips_on_channel:
-        strip.frame_start += frame_diff
-
-
-def matlab_to_python_datetime(matlab_datenum_str):
-    matlab_datenum = float(matlab_datenum_str)
-    return datetime.fromordinal(int(matlab_datenum)) + timedelta(days=matlab_datenum % 1) - timedelta(days=366)
-
-
-def iso8601_to_python_datetime(iso8601_string):
-    cleaned_string = re.sub(' +', ' ', iso8601_string)
-    try:
-        return datetime.strptime(cleaned_string, "%Y-%m-%d %H:%M:%S")
-    except ValueError:
-        return datetime.strptime(cleaned_string, "%Y-%m-%d %H:%M")
-    
-
-def downsample_data(data, old_fps, new_fps):
-    # Create an array representing the old timestamps
-    old_time = np.linspace(0, len(data)/old_fps, len(data))
-
-    # Create an array representing the new timestamps
-    new_time = np.linspace(0, len(data)/old_fps,
-                           round(len(data)*new_fps/old_fps))
-
-    # Interpolate the data to the new timestamps
-    new_data = np.interp(new_time, old_time, data)
-
-    return new_data
-
-
-def detect_delimiter(csv_file):
-    with open(csv_file, 'r') as f:
-        line = f.readline()
-        # Add any other delimiters you need to check
-        delimiters = [';', ',', '\t']
-        counts = {delimiter: line.count(delimiter) for delimiter in delimiters}
-    return max(counts, key=counts.get)
-
-
-def is_iso8601(date_string):
-        cleaned_string = re.sub(' +', ' ', date_string)
-        try:
-            datetime.strptime(cleaned_string, "%Y-%m-%d %H:%M:%S")
-            return True
-        except ValueError:
-            try:
-                datetime.strptime(cleaned_string, "%Y-%m-%d %H:%M")
-                return True
-            except ValueError:
-                return False
-
-def is_matlab_datetime(date_string):
-    try:
-        float(date_string)
-        return True
-    except ValueError:
-        return False
-
-def is_day_month_year(date_string):
-    cleaned_string = re.sub(' +', ' ', date_string)
-    try:
-        # Check if date_string is in "Day-Month-Year Hour:Minute:Second" format
-        datetime.strptime(cleaned_string, "%d-%b-%Y %H:%M:%S")
-        return True
-    except ValueError:
-        return False
- 
-
-def find_date_format(date_string):
-    if is_iso8601(date_string):
-        return iso8601_to_python_datetime
-    elif is_matlab_datetime(date_string):
-        return matlab_to_python_datetime
-    elif is_day_month_year(date_string):
-        return lambda s: datetime.strptime(s, "%d-%b-%Y %H:%M:%S")
-    else:
-        return None  # or raise an error
-
-
-def find_first_row_with_date(filepath_find_first, target_date, delimiter):
-    print("Starting to find the date ROW")
-    with open(filepath_find_first, 'r') as f:
-        reader = csv.reader(f, delimiter=delimiter)
-        # Skip the first row
-        next(reader)
-
-        # Determine the date format
-        first_row = next(reader)
-        date_converter = find_date_format(first_row[0])
-
-        # Go back to the beginning of the file
-        f.seek(0)
-        next(reader)  # Skip the header again
-
-        for index, row in enumerate(reader):
-            csv_date = row[0]
-
-            date = date_converter(csv_date)
-            dateTime = date.time()
-
-            if dateTime == target_date:
-                print("DONE: Starting to find the date ROW")
-                return index
-
-    return 0  # Return None if no row with the target date was found
-
-
-def smpte_to_time(smpte_str):
-    hh, mm, ss, ff = smpte_str.split(":")
-    return time(hour=int(hh), minute=int(mm), second=int(ss))
-
-
-def get_smtp_at_zero():
-    calc_master_frame = bpy.data.scenes[bpy.context.scene.name].master_time_frame
-    calc_master_time = bpy.data.scenes[bpy.context.scene.name].master_time
-    calc_master_time_adaption = bpy.data.scenes[bpy.context.scene.name].master_time_adaption
-    frames_from_master_clock = frame_from_smpte(calc_master_time)
-    smtp_at_zero = bpy.utils.smpte_from_frame(
-        (0 + frames_from_master_clock - calc_master_frame))
-    return smtp_at_zero
-
-def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_objects, channel_to_import_to, import_type, interpolate_data, interpolate_start, trim_emg_to_masterclock):
+def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_objects, channel_to_import_to, import_type, interpolate_data, interpolate_start, trim_emg_to_masterclock, emg_rain_flow_mvc_collected):
 
     # Ensure the system console is open
-   
+
     # Assuming images are in the same directory as the CSV file
     image_dir = os.path.dirname(filepath)
 
-    #print("Start and end row in CSV")
-    #print(csv_row_start)
-    #print(csv_row_end)
+    # print("Start and end row in CSV")
+    # print(csv_row_start)
+    # print(csv_row_end)
 
     # Get a reference to the current scene and the sequencer
     scene = bpy.context.scene
     sequencer = scene.sequence_editor_create()
 
-    
     fps = bpy.context.scene.render.fps
     fps_base = bpy.context.scene.render.fps_base
     fps_real = int(fps / fps_base)
-    # Collect data for each day
+
+    # Collect data for each day, used for Actipass and EMG import
     day_to_data = collections.defaultdict(list)
+
+    # Collect data from EMG_RAINFLOW
+    rainflow_data = collections.defaultdict(list)
+
     start_row_in_csv = csv_row_start
+
+    # Find the first row in the csv where the date and time is equal to zero time to trim the data
     if import_type == Constants.IMPORT_EMG:
         # Projected frames from master clock
         calc_master_frame = bpy.data.scenes[bpy.context.scene.name].master_time_frame
@@ -194,109 +59,26 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
         # Convert the SMTP at zero to datetime.time object
         zero_time = time(int(hh), int(mm), int(ss))
 
-        
         if trim_emg_to_masterclock:
             start_row_in_csv = find_first_row_with_date(
                 filepath, zero_time, detect_delimiter(filepath))
+    # 3d boxes if necessary
+    boxes = []
 
-    actvtColors = {
-        'NW-Gray': (128.0/255, 128.0/255, 128.0/255),
-        'Lie-Lavender': (229.0/255, 229.0/255, 250.0/255),
-        'Sit-Yellow': (255.0/255, 255.0/255, 0.0/255),
-        'Stand-LimeGreen': (50.0/255, 204.0/255, 50.0/255),
-        'Move-DarkGreen': (0.0/255, 100.0/255, 0.0/255),
-        'Walk-DarkOrange': (255.0/255, 139.0/255, 0.0/255),
-        'Run-Red': (227.0/255, 18.0/255, 32.0/255),
-        'Stair-Cornsilk': (255.0/255, 248.0/255, 219.0/255),
-        'Cycle-Purple': (128.0/255, 0.0/255, 128.0/255),
-        'Other-Sienna': (159.0/255, 82.0/255, 45.0/255),
-        'SlpInBed-DodgerBlue': (30.0/255, 143.0/255, 255.0/255),
-        'SlpOUTBed-Aquamarine': (113.0/255, 217.0/255, 226.0/255),
-        'Bed-DeepSkyBlue': (0.0/255, 191.0/255, 255.0/255),
-        'Bed-DeepSkyBlue1': (0.0/255, 191.0/255, 255.0/255),
-        'Bed-DeepSkyBlue2': (0.0/255, 191.0/255, 255.0/255),
-        'Bed-DeepSkyBlue3': (0.0/255, 191.0/255, 255.0/255),
-        'Bed-DeepSkyBlue4': (0.0/255, 191.0/255, 255.0/255),
-        'Bed-DeepSkyBlue5': (0.0/255, 191.0/255, 255.0/255),
-        'Bed-DeepSkyBlue6': (0.0/255, 191.0/255, 255.0/255),
-        'Bed-DeepSkyBlue7': (0.0/255, 191.0/255, 255.0/255)
-    }
-
+    # Creates 3d Objects in the 3d workspace
     if create_3d_objects:
 
-        # Create a list of the color tuples
-        colors = list(actvtColors.values())
-        boxes = []
+        boxes = create3dObjects(image_dir)
+        print("Number of boxes: ", len(boxes))
 
-        for i in range(20):
-                # Add a cube
-            bpy.ops.mesh.primitive_cube_add(location=(0, 0, 0))
-
-            ob = bpy.context.object
-
-            image_path = os.path.join(image_dir, f"{i+1}.png")
-
-            # Set dimensions and location
-            ob.dimensions = (1.0, 1.0, 1.0)
-            ob.location.x += ob.dimensions.x / 4
-
-            # Rename the object
-            ob.name = "Activity_" + str(i+1)
-
-            # Create a new material
-            mat = bpy.data.materials.new(name="Color_Material_" + str(i+1))
-            mat.use_nodes = True
-            bsdf = mat.node_tree.nodes["Principled BSDF"]
-
-            # Set the material's diffuse color
-            base_color = colors[i] + (1.0,)  # color values and alpha
-            bsdf.inputs['Base Color'].default_value = base_color
-
-            # If the image file exists, create a texture and apply it to the material #TODO: remove 0 == 1 if textures should be added
-            if os.path.isfile(image_path) and 0 == 1:
-                tex_image = mat.node_tree.nodes.new('ShaderNodeTexImage')
-                tex_image.image = bpy.data.images.load(image_path)
-                tex_image.extension = 'REPEAT'  # Set texture to repeat
-
-                # Add a texture coordinate and mapping node
-                coord = mat.node_tree.nodes.new('ShaderNodeTexCoord')
-                mapping = mat.node_tree.nodes.new('ShaderNodeMapping')
-                mapping.inputs['Scale'].default_value = (
-                    10.0, 10.0, 10.0)  # Scale the texture to repeat
-
-                # Link the texture coordinate and mapping nodes
-                mat.node_tree.links.new(mapping.inputs[0], coord.outputs['UV'])
-                mat.node_tree.links.new(tex_image.inputs[0], mapping.outputs[0])
-
-                # Create a new mix node and set it up to mix based on the texture's alpha
-                mix_node = mat.node_tree.nodes.new('ShaderNodeMixRGB')
-                mix_node.inputs['Color1'].default_value = base_color
-                mat.node_tree.links.new(
-                    mix_node.inputs['Color2'], tex_image.outputs['Color'])
-                mat.node_tree.links.new(
-                    mix_node.inputs['Fac'], tex_image.outputs['Alpha'])
-
-                # Link mix node to BSDF node
-                mat.node_tree.links.new(
-                    bsdf.inputs['Base Color'], mix_node.outputs['Color'])
-
-            # Add the material to the object
-            ob.data.materials.append(mat)
-
-            # Set the origin
-            bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='BOUNDS')
-
-            # Add the box to the list
-            boxes.append(ob)
-    
-
-
-    #remember dates
+    # remember dates
     date_counter = []
 
+    # remember rainflow layers
+    rainflow_layers_counter = 0
+
     # Select the object you want to duplicate
-   
-    
+
     # Check which delimiter is used
 
     delimiter = detect_delimiter(filepath)
@@ -311,29 +93,32 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                 next(reader)
 
         for index, row in enumerate(reader):
+            ######################################################################################
+            #                                                                                    #
+            #                   Prepare the read of data based on import type                    #
+            #                                                                                    #
+            ######################################################################################
             if import_type == Constants.IMPORT_ACTIPASS:
-                
 
-                #If the import_type is Actipass:
+                # If the import_type is Actipass:
                 if csv_row_start <= index <= csv_row_end:
                     # Get the activity and remove leading/trailing spaces
                     activity = row[1].strip()
                     cadence = row[2].strip()
 
-                    #Calculate walk & run differention 
+                    # Calculate walk & run differention
                     if int(activity) == 5:
-                        print(cadence)
-                        #Cadence is per minute, each row is a second from ActiPass data
+                        # print(cadence)
+                        # Cadence is per minute, each row is a second from ActiPass data
                         real_cadence = float(cadence) * 60
                         if real_cadence < 100:
-                            #Walk_slow - Picked 13 as this is not a value found in the export
+                            # Walk_slow - Picked 13 as this is not a value found in the export
                             activity = "13"
                         elif real_cadence >= 100:
-                            #Walk_Fast
+                            # Walk_Fast
                             activity = "14"
                         else:
                             activity = "5"
-
 
                     # assuming row[0] is the MATLAB datenum
                     matlab_datenum = float(row[0])
@@ -350,9 +135,9 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                 if start_row_in_csv <= index <= csv_row_end:
                     # Get the activity and remove leading/trailing spaces
                     csv_date = row[0]
-                    #print("CSV Date: ", csv_date)
+                    # print("CSV Date: ", csv_date)
                     if is_iso8601(csv_date):
-                        
+
                         # assuming row[0] is the MATLAB datenum
                         iso_datenum = row[0]
                         date = iso8601_to_python_datetime(
@@ -371,7 +156,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                         matlab_datenum = float(row[0])
                         date = matlab_to_python_datetime(
                             matlab_datenum)  # get the date
-                    
+
                         percent_mvc = float(row[1].strip())
 
                         # Collect the data for this day
@@ -379,7 +164,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
 
                         date_counter.append(date)
                     elif is_day_month_year(csv_date):
-                        #print("Yes got here")
+                        # print("Yes got here")
                         # Parse the date
                         date = datetime.strptime(csv_date, "%d-%b-%Y %H:%M:%S")
 
@@ -389,24 +174,146 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                         day_to_data[date].append(percent_mvc)
 
                         date_counter.append(date)
+            #JOHAN
+            elif import_type == Constants.IMPORT_EMG_RAINFLOW:
+                # If the import_type is EMG_RAINFLOW:
+                if start_row_in_csv <= index <= csv_row_end:
+                    # Get the activity and remove leading/trailing spaces
+                    csv_date = row[3]
+                    # print("CSV Date: ", csv_date)
+                    if is_iso8601(csv_date):
+
+                        # assuming row[] is the MATLAB datenum
+                        datenum_start = row[3]
+                        datenum_end = row[4]
+
+                        start_time = iso8601_to_python_datetime(
+                            datenum_start)  # get the date
+
+                        end_time = iso8601_to_python_datetime(
+                            datenum_end)
+
+                        # Convert the start_time input time to SMPT
+                        hh = start_time.hour
+                        mm = start_time.minute
+                        ss = start_time.second
+                        ff = "00"
+                        start_time_final = f"{hh:02}:{mm:02}:{ss:02}:{ff}"
+ 
+                        # Convert the start_time input time to SMPT
+                        hh_end = end_time.hour
+                        mm_end = end_time.minute
+                        ss_end = end_time.second
+                        ff = "00"
+                        end_time_final = f"{hh_end:02}:{mm_end:02}:{ss_end:02}:{ff}"
+
+                        #Time converted to frames
+                        frame_at_start_time = frame_from_smpte(start_time_final)
+                        frame_at_end_time = frame_from_smpte(end_time_final)
+
+                        #Input columns
+                        pre_count = row[0].strip()
+                        pre_range = row[1].strip()
+                        pre_mean = row[2].strip()
+                        # Check if the input contains "." or ",""
+                        if ',' in pre_count:
+                            pre_count = pre_count.replace(',', '.')
+
+                        if ',' in pre_range:
+                            pre_range = pre_range.replace(',', '.')
+
+                        if ',' in pre_mean:
+                            pre_mean = pre_mean.replace(',', '.')
+
+
+
+                        nr_count = float(pre_count)
+                        kg_range = float(pre_range)
+                        kg_mean = float(pre_mean)
+
+                        overlap = False
+                        overlap_number = 0
+                        for key in rainflow_data:
+                            for interval in rainflow_data[key]:
+                                # Check if the time ranges overlap
+                                if (start_time <= interval['end_time']) and (end_time >= interval['start_time']):
+                                    overlap = True
+                                    overlap_number += 1
+                                    #break
+
+                        if overlap:
+                            rainflow_layers_counter += 1
+
+                        #Johan
+                        #Calculate the OMNI-RES Equivalent for this data
+                        omni_res = decimal_percentage_to_range(
+                            kg_range / emg_rain_flow_mvc_collected)
+
+                        results_dict = {
+                            'count': nr_count,
+                            'range': kg_range,
+                            'mean': kg_mean,
+                            'start_time': start_time,
+                            'start_frame': frame_at_start_time,
+                            'end_time': end_time,
+                            'end_frame': frame_at_end_time,
+                            'overlap_number': overlap_number,
+                            'omni_res': omni_res
+                        }
+
+                        # Collect the data for this 
+                        rainflow_data[rainflow_layers_counter].append(
+                            results_dict)
+
+                    elif is_matlab_datetime(csv_date):
+
+                        datenum_start = row[3]
+                        datenum_end = row[4]
+
+                        start_time = matlab_to_python_datetime(
+                            datenum_start)  # get the date
+
+                        end_time = matlab_to_python_datetime(
+                            datenum_end)
+                        #TODO: IMPORT ABOVE
+
+                    elif is_day_month_year(csv_date):
+
+                        datenum_start = row[3]
+                        datenum_end = row[4]
+
+                        start_time = datetime.strptime(
+                            datenum_start)  # get the date
+
+                        end_time = datetime.strptime(
+                            datenum_end)
+                        # TODO: IMPORT ABOVE
+
 
 
                         
-        
-            #else:
-            #    #TODO: First listen to the import on column 1, see what timeDate format, now matlab is the only format
-            #    activity = row[1].strip()
-            #    # assuming row[0] is the MATLAB datenum
-            #    matlab_datenum = float(row[0])
-            #    date = matlab_to_python_datetime(
-            #        matlab_datenum).date()  # get the date
+        print(rainflow_data)
+        print("overlapping layers", rainflow_layers_counter)
+        print("Number of items in rainflow_data", len(rainflow_data))
+        key_counter = 0 
+        for key in rainflow_data:
+            for interval in rainflow_data[key]:
+                key_counter += 1
+        print("Number of keys in rainflow_data", key_counter)
+        # else:
+        #    #TODO: First listen to the import on column 1, see what timeDate format, now matlab is the only format
+        #    activity = row[1].strip()
+        #    # assuming row[0] is the MATLAB datenum
+        #    matlab_datenum = float(row[0])
+        #    date = matlab_to_python_datetime(
+        #        matlab_datenum).date()  # get the date
 #
-            #    # Collect the data for this day
-            #    day_to_data[date].append(activity)
+        #    # Collect the data for this day
+        #    day_to_data[date].append(activity)
 #
-            #    date_counter.append(date)
+        #    date_counter.append(date)
 
-        #lets downsample the data
+        # lets downsample the data
         if interpolate_data and import_type == Constants.IMPORT_EMG:
             fps = bpy.context.scene.render.fps / bpy.context.scene.render.fps_base
             # downsample the data for each day
@@ -414,12 +321,11 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                 day_to_data[date] = downsample_data(
                     day_to_data[date], interpolate_start, fps)  # adjust numbers as needed
 
-
     num_days = len(day_to_data)
     num_entries = sum(len(values) for values in day_to_data.values())
     print(num_days)
     print(num_entries)
-    #print(day_to_data)
+    # print(day_to_data)
 
     has_created_emg_bar = False
     frame_memory = 0
@@ -427,12 +333,10 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
     give_first = False
     move_emg_data_frames = 0
 
-    
-
-    #Figure out the start frame for the emgdata:
+    # Figure out the start frame for the emgdata:
     if import_type == Constants.IMPORT_EMG:
         date, activities = next(iter(sorted(day_to_data.items())))
-       
+
         emg_time_str = str(date.time())
 
         ff = "00"
@@ -440,7 +344,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
         emg_final_time_str = f"{hh}:{mm}:{ss}:{ff}"
 
         frame_at_emg_time_str = frame_from_smpte(emg_final_time_str)
-        
+
         smtp_at_zero = get_smtp_at_zero()
 
         video_clip_zero_time = smpte_to_time(smtp_at_zero)
@@ -449,11 +353,19 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
         if date.time() > video_clip_zero_time:
 
             frames_at_zero = frame_from_smpte(smtp_at_zero)
-            #print("Frames at zero", frame_at_emg_time_str - frames_at_zero)
+            # print("Frames at zero", frame_at_emg_time_str - frames_at_zero)
             move_emg_data_frames = frame_at_emg_time_str - frames_at_zero
 
+    ######################################################################################
 
+    #                                                                                    #
 
+    #       When the data has been imported, we decide what should be done with it       #
+
+    #                                                                                    #
+
+    ######################################################################################
+    
     # Process the data day by day
     for day_index, (date, activities) in enumerate(sorted(day_to_data.items())):
         channel_start = channel_to_import_to  # Which channel day one should end up on
@@ -464,34 +376,33 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
         current_strip = None
         current_3dObject = None
 
-        
-
         if import_type == Constants.IMPORT_ACTIPASS:
-           
+
             ######################################################################################
             #                                                                                    #
-            #                                Actipass Import                                     #
+            #                                Actipass Import  - Visuals                          #
             #                                                                                    #
             ######################################################################################
 
             for activity in activities:
 
-                #Pick the right3D Object
+                # Pick the right3D Object
                 if create_3d_objects:
+
                     object_to_duplicate = boxes[int(activity)]
 
                 if activity != current_activity:
                     # The activity has changed, if there was a previous strip, extend its end
                     if current_strip:
-                        current_strip.frame_final_duration = int(frame_start - current_strip.frame_start)
+                        current_strip.frame_final_duration = int(
+                            frame_start - current_strip.frame_start)
 
                     if current_3dObject:
 
-                        current_3dObject.dimensions.x =   (
+                        current_3dObject.dimensions.x = (
                             frame_start / 200) - current_3dObject.location.x
 
-
-                    #Switch the strip color in sequencer depending on activity
+                    # Switch the strip color in sequencer depending on activity
                     color_switch = "COLOR_05"
 
                     if activity == "6":
@@ -514,7 +425,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                     if channel == channel_start:
                         channel_display_position_y = 386
                     elif channel == channel_start - 1:
-                        channel_display_position_y = 386 - (100 *1)
+                        channel_display_position_y = 386 - (100 * 1)
                     elif channel == channel_start - 2:
                         channel_display_position_y = 386 - (100 * 2)
                     elif channel == channel_start - 3:
@@ -533,7 +444,6 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                         channel_display_position_y = 386 - (100 * 9)
                     elif channel == channel_start - 10:
                         channel_display_position_y = 386 - (100 * 10)
-
 
                     # Create a new strip for the new activity
                     image_path = os.path.join(image_dir, f"{activity}.png")
@@ -560,16 +470,17 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                             duplicated_object = object_to_duplicate.copy()
                             duplicated_object.data = object_to_duplicate.data.copy()
                             duplicated_object.animation_data_clear()
-                            bpy.context.collection.objects.link(duplicated_object)
+                            bpy.context.collection.objects.link(
+                                duplicated_object)
 
                             one_frame_in_threeD = (frame_start / 200)
                             # Translate the duplicated object
                             # Example: translate along the X-axis with increasing spacing
-                            translation_amount = (one_frame_in_threeD, (channel * 2), 0.0)
+                            translation_amount = (
+                                one_frame_in_threeD, (channel * 2), 0.0)
                             duplicated_object.location = translation_amount
                             current_3dObject = duplicated_object
-                            #print(duplicated_object.location)
-
+                            # print(duplicated_object.location)
 
                     else:
                         # If there's no image, create a text strip instead
@@ -595,35 +506,35 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
 
             # After each day, if there is a current strip, extend its end
             if current_strip:
-                current_strip.frame_final_duration = int(frame_start - current_strip.frame_start)
-
+                current_strip.frame_final_duration = int(
+                    frame_start - current_strip.frame_start)
 
             # Rename the channel´s according to date
             channel_to_rename = bpy.context.scene.sequence_editor.channels[channel]
             channel_to_rename.name = str(date)
 
-    
-            #Remember the highest entry value for the moce_strips_to_end
+            # Remember the highest entry value for the moce_strips_to_end
             highest_entry_count = 0
             for date, entry_list in day_to_data.items():
                 entry_count = len(entry_list)
-                last_entry = entry_list[-1]  # Retrieve the last entry using indexing
+                # Retrieve the last entry using indexing
+                last_entry = entry_list[-1]
                 print(f"{date}: {entry_count} entries. Last entry: {last_entry}")
                 if entry_count > highest_entry_count:
                     highest_entry_count = entry_count
 
-
-                #Take the first channel and move the data to the end of the day as this is not full 24h recording if its Acti-pass Data
+                # Take the first channel and move the data to the end of the day as this is not full 24h recording if its Acti-pass Data
                 if import_type == Constants.IMPORT_ACTIPASS:
-                    move_strips_to_end_at(channel_start, highest_entry_count)
-                #TODO: Add elif what should it do to the data if its not Acti-pass
+                    move_strips_to_end_at(
+                        channel_start, highest_entry_count)
+                # TODO: Add elif what should it do to the data if its not Acti-pass
 
                 scn = bpy.context.scene
                 seq = scn.sequence_editor
-        
+
         ######################################################################################
         #                                                                                    #
-        #                                     EMG Import                                     #
+        #                           EMG Import   - Visuals                                   #
         #                                                                                    #
         ######################################################################################
         if import_type == Constants.IMPORT_EMG:
@@ -637,7 +548,8 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                 channel = 13
 
                 # Colors
-                colors = [(0, 1, 0), (1, 1, 0), (1, 0, 0)]  # Green, Yellow, Red
+                # Green, Yellow, Red
+                colors = [(0, 1, 0), (1, 1, 0), (1, 0, 0)]
 
                 # Set the width and height of the image
                 image_width = 47
@@ -649,10 +561,8 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
 
                 # Simple linear interpolation function
 
-
                 def lerp(a, b, t):
                     return a * (1 - t) + b * t
-
 
                 # Set each pixel of the image to the corresponding color, interpolating between colors
                 for y in range(image_height):
@@ -665,10 +575,12 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                     color2 = colors[min(color_index + 1, len(colors) - 1)]
 
                     # Interpolate between the colors
-                    color = [lerp(c1, c2, t) for c1, c2 in zip(color1, color2)] + [1.0]  # RGBA
+                    color = [lerp(c1, c2, t) for c1, c2 in zip(
+                        color1, color2)] + [1.0]  # RGBA
 
                     for x in range(image_width):
-                        image.pixels[(y*image_width+x)*4:(y*image_width+x+1)*4] = color
+                        image.pixels[(y*image_width+x) *
+                                     4:(y*image_width+x+1)*4] = color
 
                 # Save the image
                 # Save the image to the current blend file directory
@@ -709,12 +621,10 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                 crop_strip.color = (0, 0, 0)
 
                 strip.frame_final_duration = frame_end - frame_start + 1
-                
 
                 width = bpy.context.scene.render.resolution_x / 2
 
                 strip.transform.offset_x = width * -0.88
-                
 
                 color_strip.transform.offset_x = strip.transform.offset_x - 1
                 color_strip.transform.offset_y = strip.transform.offset_y - 1
@@ -726,17 +636,13 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                 crop_strip.transform.scale_x = 0.026
                 crop_strip.transform.scale_y = 0.21268
 
-                
-
                 has_created_emg_bar = True
 
-
             if trim_emg_to_masterclock:
-                
 
                 smtp_at_zero = get_smtp_at_zero()
 
-                #print(smtp_at_zero)
+                # print(smtp_at_zero)
 
                 # Split into components
                 hh, mm, ss, ff = map(int, smtp_at_zero.split(':'))
@@ -744,22 +650,20 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                 # Convert the SMTP at zero to datetime.time object
                 zero_time = time(int(hh), int(mm), int(ss))
 
-                #highest_percent_mvc = max(activities)
-                
+                # highest_percent_mvc = max(activities)
+
                 if date.time() >= zero_time:
                     if not give_first:
                         print(date.time(), zero_time)
                         give_first = True
-                
-
 
                     # calculate the percentage
-                    #percent_mvc = activity / highest_percent_mvc
+                    # percent_mvc = activity / highest_percent_mvc
                     # set the crop
 
             push_late_emg = 0
             for event in activities:
-                #print(date.time())
+                # print(date.time())
                 bpy.context.scene.sequence_editor.sequences_all["EMG_COVER"].crop.min_y = int(
                     (1076 * event))
                 # set the keyframe
@@ -767,6 +671,60 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                     'min_y', frame=move_emg_data_frames + frame_start + frame_memory)
                 frame_start += 1
                 frame_memory += 1  # Move to the next frame
+
+    for key in rainflow_data:
+
+        
+
+        ######################################################################################
+        #                                                                                    #
+        #                               EMG_RAINFLOW   - Visuals                             #
+        #                                                                                    #
+        ######################################################################################
+        
+        if import_type == Constants.IMPORT_EMG_RAINFLOW:
+            # Johan
+            #TODO: PRINT OMNIRES
+            
+            for interval in rainflow_data[key]:
+                # Check if the time ranges overlap
+                # if (start_time <= interval['end_time']) and (end_time >= interval['start_time']):
+                #    overlap = True
+                #    break
+                #print(interval['start_time'].time())
+                #print("Start", interval['start_frame'])
+               # print("End", interval['end_frame'])
+                use_start_frame = int(interval['start_frame'])
+                use_end_frame = int(interval['end_frame'])
+                if use_start_frame == use_end_frame:
+                    use_end_frame = use_start_frame + 10
+                current_strip = sequencer.sequences.new_effect(
+                    name=f"Range {interval['range']} Mean: {interval['mean']}",
+                    type='TEXT',
+                    frame_start=use_start_frame,
+                    frame_end=use_end_frame,
+                    channel=interval['overlap_number'] + 1,
+                )
+                current_strip.color_tag = pickTagColorForDuet(interval['omni_res'])
+                # Adjust the position and scale of the strip
+                current_strip.transform.offset_x = -737  # Adjust the horizontal position
+                # Adjust the vertical position
+                current_strip.transform.offset_y = 386
+                current_strip.transform.scale_x = 0.6  # Adjust the horizontal scale
+                current_strip.transform.scale_y = 0.6
+                current_strip.text = f"Range {interval['range']} Mean: {interval['mean']}"
+
+
+                # After creation, make sure they are arranged on the channels 
+                if bpy.context.scene.sequence_editor:
+                
+                    # Sort strips by their start frame so that we handle them in the order they appear in the timeline
+                    all_strips = sorted(
+                        bpy.context.scene.sequence_editor.sequences_all, key=lambda s: s.frame_start)
+
+                    for strip in all_strips:
+                        move_to_lowest_channel(strip)
+                        # Adjust the vertical scale
 
     ########################################################
     #                                                      #
@@ -777,7 +735,6 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
 
         # Call user prefs window
         context = bpy.context.copy()
-
 
         # Store the current list of areas
         old_areas = bpy.context.screen.areas[:]
@@ -808,14 +765,11 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                 space.show_locked_time = True
 
         bpy.ops.screen.area_split(override, direction='HORIZONTAL', factor=0.5)
-        
 
         # Find the new area created by the split
         split_area = next(
             area for area in bpy.context.screen.areas if area not in old_areas)
-        #bpy.ops.wm.context_toggle(data_path="space_data.show_region_channels")
-
-
+        # bpy.ops.wm.context_toggle(data_path="space_data.show_region_channels")
 
         # Change the type of the new split area to the Graph Editor
         split_area.type = 'GRAPH_EDITOR'
@@ -825,8 +779,8 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
 
                 space.show_locked_time = True
 
-        #Smooth the curve to reduce aliasing, not perfect solution but minimizes dependancies
-        
+        # Smooth the curve to reduce aliasing, not perfect solution but minimizes dependancies
+
         for area in bpy.context.screen.areas:
             if area.type == 'GRAPH_EDITOR':
                 override = {'window': bpy.context.window,
@@ -834,31 +788,21 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                 bpy.ops.graph.smooth(override)
                 break
 
-
-    
-
-    
-    
-       
-    ##split_area.header_text_set("EMG DATA")
-    #for region in split_area.regions:
+    # split_area.header_text_set("EMG DATA")
+    # for region in split_area.regions:
     #    if region.type == 'TOOLS':
     #        if region.width == 1:
     #            print("toolshelf closed")
     #        else:
     #            print("toolshelf open")
     #            bpy.ops.object.hide_tools()
-    #           
+    #
     #    elif region.type == 'UI':
     #        if region.width == 1:
     #            print("properties closed")
     #        else:
     #            print("properties open")
     #            bpy.ops.object.hide_tools()
-                
-               
-                
-
 
     for area in bpy.context.screen.areas:
         if area.type == 'GRAPH_EDITOR':
@@ -866,26 +810,8 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
             ctx['area'] = area
             ctx['region'] = area.regions[-1]
             bpy.ops.graph.view_selected(ctx)
-        
-            
-
-    
-        
-
-
-                    
-
-
-  
-
-
-   
-        
 
     return {'FINISHED'}
-
-
-
 
 
 # ImportHelper is a helper class, defines filename and
@@ -903,23 +829,26 @@ class ImportSomeData(Operator, ImportHelper):
         options={'HIDDEN'},
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
-    #Setting_variables
+    # Setting_variables
     create_3d_Objects_var = False
     import_type = None
 
     csv_row_start: IntProperty(name="Start at Row", default=0)
     csv_row_end: IntProperty(name="End at Row", default=1200000)
-    channel_to_import_to: IntProperty(name="Channel to import to", default=10, description="Choose the channel to begin import too, if it contains multiple days they will decend")
-    
+    channel_to_import_to: IntProperty(name="Channel to import to", default=10,
+                                      description="Choose the channel to begin import too, if it contains multiple days they will decend")
+
     is_actipass_data: BoolProperty(name="ActiPass", default=False)
     create_3d_Objects: BoolProperty(name="Create 3d objects", default=False)
 
     is_EMG_data: BoolProperty(name="EMG", default=False)
-    
+    is_EMG_rainflow_data: BoolProperty(name="EMG_rainflow", default=False)
     interpolate_data: BoolProperty(name="Interpolate", default=True)
-    trim_emg_to_masterclock: BoolProperty(name="Trim to MasterClock", default=True)
+    trim_emg_to_masterclock: BoolProperty(
+        name="Trim to Master Time", default=True)
     interpolate_start: IntProperty(name="Interp.Rows/s", default=1000)
-    
+    emg_rain_flow_mvc_collected: IntProperty(name="MVC in KG", default=10)
+
     type: EnumProperty(
         name="File FPS",
         description="Choose FPS for import",
@@ -936,32 +865,47 @@ class ImportSomeData(Operator, ImportHelper):
         ),
         default='OPT_A',
     )
-    
+
     def draw(self, context):
         layout = self.layout
         layout.prop(self, 'channel_to_import_to')
 
-        #TODO: ADD other potential settings
+        # TODO: ADD other potential settings
 
-        # If 'is_actipass_data' is checked, then 'is_EMG_data' will not be visible and vice versa.
-        if not self.is_EMG_data:
-            layout.prop(self, 'is_actipass_data')
-        if not self.is_actipass_data:
+       # If none are checked, display all
+        if not (self.is_EMG_data or self.is_EMG_rainflow_data or self.is_actipass_data):
             layout.prop(self, 'is_EMG_data')
-        #If its actipass data
+            layout.prop(self, 'is_EMG_rainflow_data')
+            layout.prop(self, 'is_actipass_data')
+        else:
+            # If one is checked, only display that one
+            if self.is_EMG_data:
+                layout.prop(self, 'is_EMG_data')
+            elif self.is_EMG_rainflow_data:
+                layout.prop(self, 'is_EMG_rainflow_data')
+            elif self.is_actipass_data:
+                layout.prop(self, 'is_actipass_data')
 
-        lines_actipass = ['You need to set render Frame Rate', 
-                 '(Output Properties -> Frame Rate)',
-                 f'to 1 it´s currently set to: {bpy.context.scene.render.fps}',
-                 'If not, the day´s will not be correct',]
-        lines_emg= ['If the dateTime format is correct,',
-                    '(eg. 2023-02-20  10:36:00 in first column),',
-                    'the master clock is used to synch the data.',
-                    'If there is no masterclock added,',
-                    'it starts from frame 1.',
-                    'Atm. Only column 2 is imported'
-                          ]
-        
+        lines_actipass = ['You need to set render Frame Rate',
+                          '(Output Properties -> Frame Rate)',
+                          f'to 1 it´s currently set to: {bpy.context.scene.render.fps}',
+                          'If not, the day´s will not be correct',]
+        lines_emg = ['If the dateTime format is correct,',
+                     '(eg. 2023-02-20  10:36:00 in first column),',
+                     'the master time is used to synch the data.',
+                     'If there is no master time added,',
+                     'it starts from frame 1.',
+                     'Atm. Only column 2 is imported'
+                     ]
+
+        lines_emg_rainflow = ['If the dateTime format is correct,',
+                              '(eg. 2023-02-20  10:36:00 in first column),',
+                              'the master time is used to synch the data.',
+                              'If there is no master time added,',
+                              'it starts from frame 1.',
+                              'Atm. Column 1 and 2 is imported'
+                              ]
+
         if self.is_actipass_data:
             layout.prop(self, 'create_3d_Objects')
             layout.prop(self, 'csv_row_start')
@@ -975,7 +919,7 @@ class ImportSomeData(Operator, ImportHelper):
 
             if self.create_3d_Objects:
                 self.create_3d_Objects_var = True
-        
+
         elif self.is_EMG_data:
             self.import_type = Constants.IMPORT_EMG
             layout.prop(self, 'csv_row_start')
@@ -987,8 +931,14 @@ class ImportSomeData(Operator, ImportHelper):
             for line in lines_emg:
                 layout.label(text=line)
 
-     
-
+        elif self.is_EMG_rainflow_data:
+            self.import_type = Constants.IMPORT_EMG_RAINFLOW
+            layout.prop(self, 'csv_row_start')
+            layout.prop(self, 'csv_row_end')
+            layout.prop(self, 'emg_rain_flow_mvc_collected')
+            layout.label(text="Important", icon='ERROR')
+            for line in lines_emg_rainflow:
+                layout.label(text=line)
 
     def execute(self, context):
         # Check if the Blender file is saved
@@ -1006,5 +956,6 @@ class ImportSomeData(Operator, ImportHelper):
             self.import_type,
             self.interpolate_data,
             self.interpolate_start,
-            self.trim_emg_to_masterclock
+            self.trim_emg_to_masterclock,
+            self.emg_rain_flow_mvc_collected
         )

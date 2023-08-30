@@ -30,7 +30,7 @@ class EA_OT_AdaptionInfoButton(bpy.types.Operator):
     """Tooltip for this operator"""
     bl_idname = "object.adaption_info_button"
     bl_label = "Adaption or Move"
-    bl_description = "The adapt time can be used to stretch or shrink a clip, in case when there are missing or additional frames. It can also be used to move a clip to a specific master clock position. To move a clip, please create a meta strip from audio and video, place a marker where in the video it should move from (Hotkey M), a Move button should appear"
+    bl_description = "The 'adapt' time can be used to stretch or shrink a clip, in case when there are missing or additional frames in a clip. It can also be used to move a clip to a specific master clock position. To move a clip, please select it and place a marker (Hotkey M) this is the start position, end position can be dragged in timeline or entered manually. When this is fulfilled, a move button will appear."
 
     def execute(self, context):
         #bpy.ops.wm.url_open(url="https://github.com/Rockfella/ergolabs")
@@ -92,8 +92,8 @@ class MY_OT_CleanFreeChannelInput(bpy.types.Operator):
 
 class EA_OT_Master_Clock_Button(Operator):
     bl_idname = "myaddon.master_button_operator"
-    bl_label = "Set Time"
-    bl_description = "Sets the master clock to the frame selected in the timeline"
+    bl_label = "Add time layer"
+    bl_description = "Sets the master time to the frame selected in the timeline"
 
     def execute(self, context):
         # button_function(self, context)

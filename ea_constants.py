@@ -8,6 +8,7 @@ class Constants:
     
     IMPORT_ACTIPASS = (1, "ActiPass")
     IMPORT_EMG = (2, "EMG")
+    IMPORT_EMG_RAINFLOW = (3, "EMG_RAINFLOW")
 
     POSTURE = (3, 6, "POSTURE")
     EXPORT_TYPES = ["MASTER CLOCK", "DUET LEFT", "DUET RIGHT", "FREE CHANNEL"]
@@ -44,6 +45,29 @@ class Constants:
                         ('calibration_EMG_cali_Trap', 'EMG cali Trap', 'EMG cali Trap'),
                         ('calibration_EMG_cali_Deltoid', 'EMG cali Deltoid', 'EMG cali Deltoid'),
                         ('calibration_EMG_cali_Forearm', 'EMG cali Forearm', 'EMG cali Forearm')]
+    
+    actvtColors = {
+        'NW-Gray': (128.0/255, 128.0/255, 128.0/255),
+        'Lie-Lavender': (229.0/255, 229.0/255, 250.0/255),
+        'Sit-Yellow': (255.0/255, 255.0/255, 0.0/255),
+        'Stand-LimeGreen': (50.0/255, 204.0/255, 50.0/255),
+        'Move-DarkGreen': (0.0/255, 100.0/255, 0.0/255),
+        'Walk-DarkOrange': (255.0/255, 139.0/255, 0.0/255),
+        'Run-Red': (227.0/255, 18.0/255, 32.0/255),
+        'Stair-Cornsilk': (255.0/255, 248.0/255, 219.0/255),
+        'Cycle-Purple': (128.0/255, 0.0/255, 128.0/255),
+        'Other-Sienna': (159.0/255, 82.0/255, 45.0/255),
+        'SlpInBed-DodgerBlue': (30.0/255, 143.0/255, 255.0/255),
+        'SlpOUTBed-Aquamarine': (113.0/255, 217.0/255, 226.0/255),
+        'Bed-DeepSkyBlue': (0.0/255, 191.0/255, 255.0/255),
+        'Bed-DeepSkyBlue1': (0.0/255, 191.0/255, 255.0/255),
+        'Bed-DeepSkyBlue2': (0.0/255, 191.0/255, 255.0/255),
+        'Bed-DeepSkyBlue3': (0.0/255, 191.0/255, 255.0/255),
+        'Bed-DeepSkyBlue4': (0.0/255, 191.0/255, 255.0/255),
+        'Bed-DeepSkyBlue5': (0.0/255, 191.0/255, 255.0/255),
+        'Bed-DeepSkyBlue6': (0.0/255, 191.0/255, 255.0/255),
+        'Bed-DeepSkyBlue7': (0.0/255, 191.0/255, 255.0/255)
+    }
 
 
 def pickTagColorForDuet(key):

@@ -64,8 +64,8 @@ class EA_PT_Panel(Panel):
                             layout.operator("myaddon.master_button_operator_move", text="Move to Time")
                     else:
                         layout.label(
-                            text="To enable move, please mark (Hotkey M)")
-                        layout.label(text="inside the movie clip you want to move")
+                            text="Hover over questionmark icon to learn how to move clip.")
+                        
                    
                    
                    
