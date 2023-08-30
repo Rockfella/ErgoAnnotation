@@ -38,8 +38,8 @@ We have created a start-up file which is included in this repo. "start_up_file.b
 the best "standard" configuration for working with videos in blender open the file. Press: File -> Defaults -> 
 Save Startup File. This way the configuration will remain throughout different projects.
 
-[See how](https://github.com/Rockfella/rockfella_public/blob/main/start_up_file.gif)
-![](https://github.com/Voyz/voyz_public/blob/master/databay_promo_vidA_gif_A03.gif)
+![](https://github.com/Rockfella/rockfella_public/blob/main/start_up_file.gif)
+
 
 
 ---
