@@ -33,7 +33,12 @@ Install Addon in blender:
 Blender -> Edit -> Preferences -> Add-ons -> Install -> Find zip file and enable (the left check box)
 Under Video Sequencer - New File - Video Editing -> Sequencer toggle "n" panel, see ErgoAnnotation tab
 
+## Start Configuration
+We have created a start-up file which is included in this repo. "start_up_file.blend", if you would like to use 
+the best "standard" configuration for working with videos in blender open the file. Press: File -> Defaults -> 
+Save Startup File. This way the configuration will remain throughout different projects.
 
+[See how](https://github.com/Rockfella/rockfella_public/blob/main/start_up_file.gif?raw=true)
 
 
 ---

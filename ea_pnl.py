@@ -11,7 +11,7 @@ class EA_PT_Panel(Panel):
     bl_idname = "SEQUENCER_PT_my_addon_panel2"
     bl_space_type = 'SEQUENCE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'ERGONOMICS'
+    bl_category = 'ErgoAnnotation'
 
     def draw(self, context):
         layout = self.layout
@@ -76,7 +76,7 @@ class EA_PT_Panel_Free_Channel(Panel):
     bl_idname = "SEQUENCER_PT_my_addon_panel_free_channel"
     bl_space_type = 'SEQUENCE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'ERGONOMICS'
+    bl_category = 'ErgoAnnotation'
 
     def draw(self, context):
         layout = self.layout
@@ -156,7 +156,7 @@ class EA_PT_Panel_Inputs(Panel):
     bl_idname = "SEQUENCER_PT_my_addon_panel_inputs"
     bl_space_type = 'SEQUENCE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'ERGONOMICS'
+    bl_category = 'ErgoAnnotation'
 
     def draw(self, context):
         layout = self.layout
@@ -192,7 +192,7 @@ class EA_PT_Panel_Export(Panel):
     bl_idname = "SEQUENCER_PT_my_addon_panel3"
     bl_space_type = 'SEQUENCE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'ERGONOMICS'
+    bl_category = 'ErgoAnnotation'
 
     def draw(self, context):
         layout = self.layout
@@ -206,7 +206,7 @@ class EA_PT_Panel_Import(Panel):
     bl_idname = "SEQUENCER_PT_my_addon_panel_import_file"
     bl_space_type = 'SEQUENCE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'ERGONOMICS'
+    bl_category = 'ErgoAnnotation'
 
     def draw(self, context):
         layout = self.layout
@@ -220,7 +220,7 @@ class EA_PT_Panel_Video_Import(Panel):
     bl_idname = "SEQUENCER_PT_video_import"
     bl_space_type = 'SEQUENCE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'ERGONOMICS'
+    bl_category = 'ErgoAnnotation'
 
     def draw(self, context):
         layout = self.layout
