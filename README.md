@@ -28,8 +28,8 @@ Blender: This addon is designed for Blender version 3.5.1. Make sure to have thi
 
 
 
-### ErgoAnnotation - blender addon
-Install addon in blender: 
+### ErgoAnnotation - Blender Addon
+Install Addon in blender: 
 Blender -> Edit -> Preferences -> Add-ons -> Install -> Find zip file and enable (the left check box)
 Under Video Sequencer - New File - Video Editing -> Sequencer toggle "n" panel, see ErgoAnnotation tab
 
