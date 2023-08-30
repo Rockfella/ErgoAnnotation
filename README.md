@@ -75,7 +75,7 @@ After that, set the master clock.
 
 ## Concluding Remarks
 
-I hope this addon will help users who are experimenting with move.ai
+
 
 ---
 
