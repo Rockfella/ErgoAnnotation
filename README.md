@@ -49,10 +49,10 @@ Save Startup File. This way the configuration will remain throughout different p
 input 00:00:00:00, HH:MM:SS:FF where FF is frames.
 
 ### Add your videos
+ 
+Add your videos using the sequencer window Add -> Movie, this way we ensure that the relative file paths is kept. 
 
-Add your videos using the sequencer window "Add" -> Movie
-
-[See how](https://i.imgur.com/ssB1Rv3.gif)
+![](https://github.com/Rockfella/rockfella_public/blob/main/add_movie.gif)
 
 
 
