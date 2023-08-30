@@ -50,12 +50,15 @@ input 00:00:00:00, HH:MM:SS:FF where FF is frames.
 
 ### Add your videos
  
-Add your videos using the sequencer window Add -> Movie, this way we ensure that the relative file paths is kept. 
+Add your videos using the sequencer window Add -> Movie, this way we ensure that the relative file paths are kept. 
 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/add_movie.gif)
 
+### Set preview range
+Like any video software, you have to specify when the project time should start and end. In Blender its called "range". To set the projects range to the newly imported video strip, you can either do: Click on the video strip, View -> Range -> Set Frame Range to Strips or right click the video and press "Set Range to Strip"
 
 
+![](https://github.com/Rockfella/rockfella_public/blob/main/set_range.gif)
 
 ### Set Master Clock
 
