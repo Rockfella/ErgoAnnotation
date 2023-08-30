@@ -48,7 +48,7 @@ Save Startup File. This way the configuration will remain throughout different p
 
 ### Start a new project
 In the welcome window of Blender, select New -> Video Editing. Or File -> New -> Video Editing, this takes you to the video sequencer where most of the work is done.
-input 00:00:00:00, HH:MM:SS:FF where FF is frames.
+input 00:00:00:00, 
 ### Find the panel
 The ErgoAnnotation panel can be found in the sequencer window. If its not visible, you can toggle the panels visability using the Hotkey "N". 
 
@@ -65,11 +65,11 @@ Like any video software, you have to specify when the project time should start 
 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/set_range.gif)
 
-### Set Master Clock
+### Set Master Time
 
-After that, set the master clock.
+Adding a "master time" strip will enable the syncronisation between video and the annotations and is used when exporting data. In the video, find the frame where the master time is visible and the exact frame where "seconds" indicator is changeing. Input that time, in the "master time" input field. HH:MM:SS:FF where FF is frames. If the right frame has been selected where a second has just changed, set "FF (frames)" to :00. Press "Add time layer". Make sure that the time is synched with the video master time. 
 
-[See how](https://i.imgur.com/EtameVt.gif)
+![](https://github.com/Rockfella/rockfella_public/blob/main/master_time_colors.gif)
 
 
 
