@@ -46,10 +46,15 @@ Save Startup File. This way the configuration will remain throughout different p
 
 ## How to use
 
+### Start a new project
+In the welcome window of Blender, select New -> Video Editing. Or File -> New -> Video Editing, this takes you to the video sequencer where most of the work is done.
 input 00:00:00:00, HH:MM:SS:FF where FF is frames.
+### Find the panel
+The ErgoAnnotation panel can be found in the sequencer window. If its not visible, you can toggle the panels visability using the Hotkey "N". 
+
+![](https://github.com/Rockfella/rockfella_public/blob/main/toggle_panel.gif)
 
 ### Add your videos
- 
 Add your videos using the sequencer window Add -> Movie, this way we ensure that the relative file paths are kept. 
 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/add_movie.gif)
