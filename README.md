@@ -1,6 +1,7 @@
 # ErgoAnnotation
-
-Ergoannotation is..
+ErgoAnnotation is a tool meant to increase the speed and precision in which video annotations can be produced. The annotations can be used for risk assessments and machine learning.  
+It simplifies the ergonomics assessment process, ensuring workplaces remain safe and workers stay healthy. 
+Dive into our documentation, try out the software, and let's create a safer working environment together!
 
 ---
 
@@ -30,8 +31,8 @@ Blender: This addon is designed for Blender version 3.5.1. Make sure to have thi
 
 
 ### ErgoAnnotation - Blender Addon
-Install Addon in blender: 
-Blender -> Edit -> Preferences -> Add-ons -> Install -> Find zip file and enable (the left check box)
+Install Addon in Blender: 
+Blender -> Edit -> Preferences -> Add-ons -> Install -> Find zip file and press enable (the left check box) in the addons panel.
 Under Video Sequencer - New File - Video Editing -> Sequencer toggle "n" panel, see ErgoAnnotation tab
 
 ## Start Configuration
@@ -74,6 +75,11 @@ Adding a "master time" strip will enable the syncronisation between video and th
 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/master_time_colors.gif)
 
+### Start Annotate
+Select the input type, DUET RIGHT / LEFT or FREE CHANNEL. Both DUET channels are OMNI-RES meant to be used for the Distal Upper Extremity Tool (DUET). If you would like to add your own annotations add them to the free channel list. The Hotkeys for all channels are NUM 1-9 + NUM 1 + CTRL = 10. Use arrow left / right to seek in slomotion, arrow up / down for faster seek.
+
+
+![](https://github.com/Rockfella/rockfella_public/blob/main/annotate_example.gif)
 
 ## Handle problems
 ### Video footage lost frames
