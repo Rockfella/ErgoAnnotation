@@ -94,9 +94,9 @@ Select the input type, DUET RIGHT / LEFT or FREE CHANNEL. Both DUET channels are
 When the annotations are complete, the annotations can be exported to .csv for further analysis. 
 
 ## Import
-Before importing data, it´s required to save the file first. This is important as the Actipass imports use the file folder to find potential icons you can download the icons from this repo:
+Before importing data, it´s required to save the file first. This is important as the Actipass imports use the file folder to find potential icons you can download the icons from this repo: [ActiPass Icons](https://github.com/Rockfella/ErgoAnnotation/blob/master/ActiPassIcons.zip)
 
-
+Extract the file and place them in the same folder as the .blend file, that way the Icons will be imported to the timeline instead of text. 
 
 ## Potential Issues
 ### Video footage lost frames
