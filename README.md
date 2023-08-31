@@ -17,8 +17,7 @@ Dive into our documentation, try out the software, and enjoy this free tool.
 1. [Installation](#Installation)
 2. [How to use](#How-to-use)
 3. [Handle problems](#Handle-problems)
-4. [Concluding remarks](#Concluding-Remarks)
-5. [License](#License)
+4. [License](#License)
 
 
 ---
@@ -119,14 +118,13 @@ When installed, in the same folder as the clip is:
 2. type "cd c:/your_video_folder"
 3. Use the following command to convert mts to mp4 “ffmpeg -i your_MTS_Clip_Name.mts -c:v copy -c:a aac -strict experimental -b:a 128k your_New_Output_Name.mp4”
 
+### Video Preview is lagging
+In the Video Preview window toggle Hotkey "N" choose tab View and change the proxy render to a lower value
+
+![](https://github.com/Rockfella/rockfella_public/blob/main/view_proxy.png)
 
 ---
 
-## Concluding Remarks
-
-
-
----
 
 ## License
 
