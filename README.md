@@ -29,7 +29,8 @@ Dive into our documentation, try out the software, and let's create a safer work
 Requirements
 Blender: This addon is designed for Blender version 3.5.1. Make sure to have this version or newer installed.
 
-
+ErgoAnnotation zip file:
+[ergoannotation.zip](https://www.blender.org/download/)
 
 ### Blender
 
