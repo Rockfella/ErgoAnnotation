@@ -1,13 +1,12 @@
 # ErgoAnnotation
-ErgoAnnotation is a tool meant to increase the speed and precision in which video annotations can be produced. The annotations can be used for risk assessments and machine learning.  
+ErgoAnnotation is a tool meant to increase the speed and precision in which video annotations can be produced. The annotations can be used for risk assessments and machine learning or other purposes.  
 
-In addition to risk assessment annotations, the tool handles EMG data import, so that the rating can be compared with actual data. 
+In addition annotations, there are a few import functions:
+1. ActiPass import, enables the user to visualise the ActiPass data and can overlay video. 
+2. EMG-data import and synchronization 
 
-The tool has these additional import functions:
-ActiPass import, enables the user to visualise the ActiPass data and can overlay video. 
-EMG-RAINFLOW analysis import. 
 
-Dive into our documentation, try out the software, and let's create a safer working environment together!
+Dive into our documentation, try out the software, and enjoy this free tool.
 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/annotate_example.gif)
 
@@ -96,10 +95,7 @@ Select the input type, DUET RIGHT / LEFT or FREE CHANNEL. Both DUET channels are
 
 
 ### Export Annotations to CSV
-When the annotations are complete, the ratings can be exported to csv for further analysis. With regards to DUET, the complete risk analysis is being built. As for now, the .csv file rows can be calculated and used in the DUET tool. https://duet.pythonanywhere.com/
-
-
-
+When the annotations are complete, the annotations can be exported to .csv for further analysis. 
 
 
 
