@@ -48,11 +48,8 @@ Save Startup File. This way the configuration will remain throughout different p
 
 ### Start a new project
 In the welcome window of Blender, select New -> Video Editing. Or File -> New -> Video Editing, this takes you to the video sequencer where most of the work is done.
-input 00:00:00:00, 
-### Find the panel
-The ErgoAnnotation panel can be found in the sequencer window. If its not visible, you can toggle the panels visability using the Hotkey "N". 
 
-![](https://github.com/Rockfella/rockfella_public/blob/main/toggle_panel.gif)
+
 
 ### Add your videos
 Add your videos using the sequencer window Add -> Movie, this way we ensure that the relative file paths are kept. 
@@ -64,6 +61,11 @@ Like any video software, you have to specify when the project time should start 
 
 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/set_range.gif)
+
+### Find the panel
+The ErgoAnnotation panel can be found in the sequencer window. If its not visible, you can toggle the panels visability using the Hotkey "N". 
+
+![](https://github.com/Rockfella/rockfella_public/blob/main/toggle_panel.gif)
 
 ### Set Master Time
 
