@@ -8,8 +8,9 @@ Ergoannotation is..
 
 1. [Installation](#Installation)
 2. [How to use](#How-to-use)
-3. [Concluding Remarks](#Concluding-Remarks)
-4. [License](#License)
+3. [Handle problems](#Handle-problems)
+4. [Concluding remarks](#Concluding-Remarks)
+5. [License](#License)
 
 
 ---
@@ -74,7 +75,13 @@ Adding a "master time" strip will enable the syncronisation between video and th
 ![](https://github.com/Rockfella/rockfella_public/blob/main/master_time_colors.gif)
 
 
+## Handle problems
+### Video footage lost frames
+Some video recordings might have lost frames, this is a known issue as cameras can have a fluctuating recording-FPS. 
+In order to deal with this issue, we have created the stretch and shrink function. This issue is mostly noticed when a master time has been recorded in the footage, before and after. Usually its just a couple of frames missing. Using the recorded master time from the footage, we can however compensate for the loss of frames. After adding a master time layer, according to the first master time. Look for the second master time, find a second’s switch (when time changes its seconds) in the footage and correct the strip by selecting the movie strip, and noting down the Adapted time. (What the time in the footage should be according to the time layer.)  
 
+
+![](https://github.com/Rockfella/rockfella_public/blob/main/stretch_shrink.gif)
 
 
 
