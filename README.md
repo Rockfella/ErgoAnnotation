@@ -1,6 +1,12 @@
 # ErgoAnnotation
 ErgoAnnotation is a tool meant to increase the speed and precision in which video annotations can be produced. The annotations can be used for risk assessments and machine learning.  
-It simplifies the ergonomics assessment process, ensuring workplaces remain safe and workers stay healthy. 
+
+In addition to risk assessment annotations, the tool handles EMG data import, so that the rating can be compared with actual data. 
+
+The tool has these additional import functions:
+ActiPass import, enables the user to visualise the ActiPass data and can overlay video. 
+EMG-RAINFLOW analysis import. 
+
 Dive into our documentation, try out the software, and let's create a safer working environment together!
 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/annotate_example.gif)
@@ -67,18 +73,25 @@ Like any video software, you have to specify when the project time should start 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/set_range.gif)
 
 ### Find the panel
-The ErgoAnnotation panel can be found in the sequencer window. If its not visible, you can toggle the panels visability using the Hotkey "N". 
+The ErgoAnnotation panel can be found in the sequencer window. If its not visible, you can toggle the panels visibility using the Hotkey "N". 
 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/toggle_panel.gif)
 
 ### Set Master Time
 
-Adding a "master time" strip will enable the syncronisation between video and the annotations and is used when exporting data. In the video, find the frame where the master time is visible and the exact frame where "seconds" indicator is changeing. Input that time, in the "master time" input field. HH:MM:SS:FF where FF is frames. If the right frame has been selected where a second has just changed, set "FF (frames)" to :00. Press "Add time layer". Make sure that the time is synched with the video master time. 
+Adding a "master time" strip will enable the synchronization between video and the annotations and is used when exporting data. In the video, find the frame where the master time is visible and the exact frame where "seconds" indicator is changing. Input that time, in the "master time" input field. HH:MM:SS:FF where FF is frames. If the right frame has been selected where a second has just changed, set "FF (frames)" to :00. Press "Add time layer". Make sure that the time is synched with the video master time. 
 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/master_time_colors.gif)
 
 ### Start Annotate
-Select the input type, DUET RIGHT / LEFT or FREE CHANNEL. Both DUET channels are OMNI-RES meant to be used for the Distal Upper Extremity Tool (DUET). If you would like to add your own annotations add them to the free channel list. The Hotkeys for all channels are NUM 1-9 + NUM 1 + CTRL = 10. Use arrow left / right to seek in slomotion, arrow up / down for faster seek.
+Select the input type, DUET RIGHT / LEFT or FREE CHANNEL. Both DUET channels are OMNI-RES meant to be used for the Distal Upper Extremity Tool (DUET). If you would like to add your own annotations add them to the free channel list. The Hotkeys for all channels are NUM 1-9 + NUM 1 + CTRL = 10. Use arrow left / right to seek in slow-motion, arrow up / down for faster seek.
+
+
+
+### Export Annotations to CSV
+When the annotations are complete, the ratings can be exported to csv for further analysis. With regards to DUET, the complete risk analysis is being built. As for now, the .csv file rows can be calculated and used in the DUET tool. https://duet.pythonanywhere.com/
+
+
 
 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/annotate_example.gif)
