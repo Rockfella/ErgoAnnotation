@@ -99,7 +99,7 @@ When the annotations are complete, the annotations can be exported to .csv for f
 
 
 
-## Handle problems
+## Potential Issues
 ### Video footage lost frames
 Some video recordings might have lost frames, this is a known issue as cameras can have a fluctuating recording-FPS. 
 In order to deal with this issue, we have created the stretch and shrink function. This issue is mostly noticed when a master time has been recorded in the footage, before and after. Usually its just a couple of frames missing. Using the recorded master time from the footage, we can however compensate for the loss of frames. After adding a master time layer, according to the first master time. Look for the second master time, find a second’s switch (when time changes its seconds) in the footage and correct the strip by selecting the movie strip, and noting down the Adapted time. (What the time in the footage should be according to the time layer.)  
@@ -107,6 +107,17 @@ In order to deal with this issue, we have created the stretch and shrink functio
 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/stretch_shrink.gif)
 
+
+### .MTS video format
+Avoid using MTS format, as seeking (dragging timeline and other jumps in frames) is known to be produce lag with this format.
+
+To convert MTS to MP4 use the simple tool:
+https://ffmpeg.org/download.html
+
+When installed, in the same folder as the clip is:
+1. Open command promt
+2. type "cd c:/your_video_folder"
+3. Use the following command to convert mts to mp4 “ffmpeg -i your_MTS_Clip_Name.mts -c:v copy -c:a aac -strict experimental -b:a 128k your_New_Output_Name.mp4”
 
 
 ---
