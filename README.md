@@ -15,9 +15,10 @@ Dive into our documentation, try out the software, and enjoy this free tool.
 ## Table of Contents
 
 1. [Installation](#Installation)
-2. [How to use](#How-to-use)
-3. [Handle problems](#Handle-problems)
-4. [License](#License)
+2. [How to use annotation](#How-to-use)
+3. [Import](#Import)
+4. [Handle problems](#Handle-problems)
+5. [License](#License)
 
 
 ---
@@ -91,6 +92,9 @@ Select the input type, DUET RIGHT / LEFT or FREE CHANNEL. Both DUET channels are
 
 ### Export Annotations to CSV
 When the annotations are complete, the annotations can be exported to .csv for further analysis. 
+
+## Import
+Before importing data, it´s required to save the file first. This is important as the Actipass imports use the file folder to find potential icons you can download the icons from this repo:
 
 
 
