@@ -37,8 +37,11 @@ Blender: This addon is designed for Blender version 3.5.1. Make sure to have thi
 
 
 ### ErgoAnnotation - Blender Addon
+
+[Download ergoannotation.zip](https://github.com/Rockfella/ErgoAnnotation/blob/master/latest/ergoannotation.zip)
+
 Install Addon in Blender: 
-Blender -> Edit -> Preferences -> Add-ons -> Install -> Find zip file["ergoannotation.zip"](https://github.com/Rockfella/ErgoAnnotation/blob/master/latest/ergoannotation.zip). Check enable (the left check box) in the addons panel.
+Blender -> Edit -> Preferences -> Add-ons -> Install -> Find zip file [ergoannotation.zip](https://github.com/Rockfella/ErgoAnnotation/blob/master/latest/ergoannotation.zip). Check enable (the left check box) in the addons panel.
 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/install_addon.png)
 Under Video Sequencer - New File - Video Editing -> Sequencer toggle "n" panel, see ErgoAnnotation tab
