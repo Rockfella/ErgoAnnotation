@@ -87,6 +87,8 @@ Adding a "master time" strip will enable the synchronization between video and t
 ### Start Annotate
 Select the input type, DUET RIGHT / LEFT or FREE CHANNEL. Both DUET channels are OMNI-RES meant to be used for the Distal Upper Extremity Tool (DUET). If you would like to add your own annotations add them to the free channel list. The Hotkeys for all channels are NUM 1-9 & NUM 1 + CTRL = 10. Use arrow left / right to seek in slow-motion, arrow up / down for faster seek.
 
+Hotkey "X" is delete in Blender. If you wish to change the input you can right click the strip, Ergoannotation -> change the value. 
+
 ![](https://github.com/Rockfella/rockfella_public/blob/main/annotate_example.gif)
 
 
