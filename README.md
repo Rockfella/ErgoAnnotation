@@ -3,6 +3,8 @@ ErgoAnnotation is a tool meant to increase the speed and precision in which vide
 It simplifies the ergonomics assessment process, ensuring workplaces remain safe and workers stay healthy. 
 Dive into our documentation, try out the software, and let's create a safer working environment together!
 
+![](https://github.com/Rockfella/rockfella_public/blob/main/annotate_example.gif)
+
 ---
 
 ## Table of Contents
