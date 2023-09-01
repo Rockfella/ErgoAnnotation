@@ -98,10 +98,10 @@ When the annotations are complete, the annotations can be exported to .csv for f
 
 ## Import
 ### ActiPass
-Before importing data, it´s required to save the file first. This is important as the Actipass imports use the file folder to find potential icons you can download the icons from this repo: [ActiPass Icons](https://github.com/Rockfella/ErgoAnnotation/blob/master/ActiPassIcons.zip)
+Before importing data, it´s required to save the .blend file first. This is important as the Actipass imports use the file folder to find potential icons you can download the icons from this repo: [ActiPass Icons](https://github.com/Rockfella/ErgoAnnotation/blob/master/ActiPassIcons.zip)
 
 Extract the file and place them in the same folder as the .blend file, that way the Icons will be imported to the timeline instead of text. 
-![](https://github.com/Rockfella/rockfella_public/blob/main/import_example.png)
+![Example .csv import](https://github.com/Rockfella/rockfella_public/blob/main/import_example.png)
 ### EMG-Data import. 
 As of now, in the .csv file column 1 should be dateTime. Column 2 is where we import emg data. Additional EMG channels are being worked on. 
 
