@@ -93,6 +93,18 @@ Hotkey "X" is delete in Blender. If you wish to change the input you can right c
 ![](https://github.com/Rockfella/rockfella_public/blob/main/annotate_example.gif)
 
 
+### Importing and arranging multiple video recording 
+If you wish to import multiple video files, lets say multiple cameras have been used. Follow these instructions:
+After you have set the master time layer to one of the videos, this layer can be used to guide a second video. 
+First, if you wish to see both clips simultaneously select both clips. In the preview window press Hotkey "s" to 
+scale them down. Then select one at the time and move them on the x-axis by pressing Hotkey "G", then "X" to move 
+on that axis. When they are aligned in the preview window. Select the newly added video clip and it's 
+associated sound clip, right click and "Make Meta Strip".
+
+After that find the added videos master clock in the preview window, select that meta strip press Hotkey "M" 
+to set the start position, if you now move the cursor to the ErgoAnnotation panel there should be a "Move Button" 
+added. Write down the time displayed in the new video or move the timeline to the second position. Then press "Move"
+
 ### Export Annotations to CSV
 When the annotations are complete, the annotations can be exported to .csv for further analysis. 
 
