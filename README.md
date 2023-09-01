@@ -1,7 +1,7 @@
 # ErgoAnnotation
 ErgoAnnotation is a tool meant to increase the speed and precision in which video annotations can be produced. The annotations can be used for risk assessments and machine learning or other purposes.  
 
-In addition annotations, there are a few import functions:
+In addition, there are a few import functions:
 1. ActiPass import, enables the user to visualise the ActiPass data and can overlay video. 
 2. EMG-data import and synchronization 
 
@@ -15,10 +15,11 @@ Dive into our documentation, try out the software, and enjoy this free tool.
 ## Table of Contents
 
 1. [Installation](#Installation)
-2. [How to use annotation](#How-to-use)
+2. [How to use](#How-to-use)
 3. [Import](#Import)
-4. [Handle problems](#Handle-problems)
-5. [License](#License)
+4. [Handle issues](#Handle-issues)
+5. [Future pipeline](#Future-pipeline)
+6. [License](#License)
 
 
 ---
@@ -100,11 +101,11 @@ When the annotations are complete, the annotations can be exported to .csv for f
 Before importing data, it´s required to save the file first. This is important as the Actipass imports use the file folder to find potential icons you can download the icons from this repo: [ActiPass Icons](https://github.com/Rockfella/ErgoAnnotation/blob/master/ActiPassIcons.zip)
 
 Extract the file and place them in the same folder as the .blend file, that way the Icons will be imported to the timeline instead of text. 
-
+![](https://github.com/Rockfella/rockfella_public/blob/main/import_example.png)
 ### EMG-Data import. 
 As of now, in the .csv file column 1 should be dateTime. Column 2 is where we import emg data. Additional EMG channels are being worked on. 
 
-## Potential Issues
+## Handle Issues
 ### Video footage lost frames
 Some video recordings might have lost frames, this is a known issue as cameras can have a fluctuating recording-FPS. 
 In order to deal with this issue, we have created the stretch and shrink function. This issue is mostly noticed when a master time has been recorded in the footage, before and after. Usually its just a couple of frames missing. Using the recorded master time from the footage, we can however compensate for the loss of frames. After adding a master time layer, using to the first video master time. Look for the second master time, find a second’s switch (when time changes its seconds) in the footage and correct the strip by selecting the movie strip, and noting down the Adapted time. (What the time in the footage should be according to the time layer.)  
@@ -130,6 +131,8 @@ In the Video Preview window toggle Hotkey "N" choose tab View and change the pro
 ![](https://github.com/Rockfella/rockfella_public/blob/main/view_proxy.png)
 
 ---
+## Future pipeline
+1. Custom .csv import, where the end-user can adjust import configurations.
 
 
 ## License
