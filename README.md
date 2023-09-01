@@ -102,8 +102,9 @@ on that axis. When they are aligned in the preview window. Select the newly adde
 associated sound clip, right click and "Make Meta Strip".
 
 After that find the added videos master clock in the preview window, select that meta strip press Hotkey "M" 
-to set the start position, if you now move the cursor to the ErgoAnnotation panel there should be a "Move Button" 
-added. Write down the time displayed in the new video or move the timeline to the second position. Then press "Move"
+to add a marker and which set´s the start position, if you now move the cursor to the ErgoAnnotation panel there 
+should be a "Move Button" added. Write down the time displayed in the new video or move the timeline to 
+the second position. Then press "Move"
 
 ### Export Annotations to CSV
 When the annotations are complete, the annotations can be exported to .csv for further analysis. 
