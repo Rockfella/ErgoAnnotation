@@ -2,8 +2,8 @@
 ErgoAnnotation is a tool meant to increase the speed and precision in which video annotations can be produced. The annotations can be used for risk assessments and machine learning or other purposes.  
 
 In addition, there are a few import functions:
-1. ActiPass import, enables the user to visualise the ActiPass data and can overlay video. 
-2. EMG-data import and synchronization 
+1. [ActiPass](https://github.com/Ergo-Tools/ActiPASS) import, enables the user to visualise the ActiPass data and can overlay video. 
+2. Electromyography (EMG) data import and synchronization 
 
 
 Dive into our documentation, try out the software, and enjoy this free tool.
@@ -92,8 +92,8 @@ Hotkey "X" is delete in Blender. If you wish to change the input you can right c
 
 ![](https://github.com/Rockfella/rockfella_public/blob/main/annotate_example.gif)
 
-
-### Importing and arranging multiple video recording 
+<!-- Will change this part to include auto arranging-->
+<!--### Importing and arranging multiple video recording 
 If you wish to import multiple video files, lets say multiple cameras have been used. Follow these instructions:
 After you have set the master time layer to one of the videos, this layer can be used to guide a second video. 
 First, if you wish to see both clips simultaneously select both clips. In the preview window press Hotkey "s" to 
@@ -104,10 +104,13 @@ associated sound clip, right click and "Make Meta Strip".
 After that find the added videos master clock in the preview window, select that meta strip press Hotkey "M" 
 to add a marker and which set´s the start position, if you now move the cursor to the ErgoAnnotation panel there 
 should be a "Move Button" added. Write down the time displayed in the new video or move the timeline to 
-the second position. Then press "Move"
+the second position. Then press "Move"-->
 
 ### Export Annotations to CSV
-When the annotations are complete, the annotations can be exported to .csv for further analysis. 
+When the annotations are complete, the annotations can be exported to .csv for further analysis. The .csv file contains one row per frame and includes the different input models.
+If the same type of input model strips have been added to the channels (by moving them to separate channels) both will be included in the export under the same input model column. 
+
+![](https://github.com/Rockfella/rockfella_public/blob/main/export_example.png)
 
 ## Import
 ### ActiPass
@@ -116,7 +119,7 @@ Before importing data, it´s required to save the .blend file first. This is imp
 Extract the file and place them in the same folder as the .blend file, that way the Icons will be imported to the timeline instead of text. 
 Example .csv import file structure:
 ![](https://github.com/Rockfella/rockfella_public/blob/main/import_example.png)
-### EMG-Data import. 
+### EMG-Data import 
 As of now, in the .csv file column 1 should be dateTime. Column 2 is where we import emg data. Additional EMG channels are being worked on. 
 
 ## Handle Issues
