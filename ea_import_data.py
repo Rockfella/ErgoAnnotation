@@ -889,7 +889,15 @@ class ImportSomeData(Operator, ImportHelper):
         lines_actipass = ['You need to set render Frame Rate',
                           '(Output Properties -> Frame Rate)',
                           f'to 1 it´s currently set to: {bpy.context.scene.render.fps}',
-                          'If not, the day´s will not be correct',]
+                          'If not, data collection from multiple,', 
+                          'days will not be correct',
+                          'If the data collection is less than a ',
+                          'day, there is no need to change the fps.'
+                          'The 1s data will automatically be sampled',
+                          'to the video fps.'
+                          
+                          ]
+        
         lines_emg = ['If the dateTime format is correct,',
                      '(eg. 2023-02-20  10:36:00 in first column),',
                      'the master time is used to synch the data.',
