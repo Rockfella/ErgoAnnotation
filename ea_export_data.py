@@ -44,7 +44,8 @@ def write_some_data(context, filepath, use_some_setting):
 
     for strip in sorted_strips:
         filter_name = strip.name.split(',')
-        if strip.type == 'TEXT' and filter_name[0]:
+        if strip.type == 'TEXT' and strip.name.count(',') > 2:
+            
             start_frame = int(strip.frame_start)
             end_frame = start_frame + int(strip.frame_final_duration)
             
