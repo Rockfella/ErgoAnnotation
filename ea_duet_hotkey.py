@@ -386,6 +386,8 @@ def executeThePressFromKey(self, context, key):
         choosen_tag_color = pickTagColorForFreeMode(key)
         text_strip_visual_color = pickVisualTextColorForFreeMode(key)
 
+    #Remember the default channel to help the visual position
+    current_input_channel_base = current_input_channel
 
     time_now = datetime.datetime.now()
     formatted_date_time = time_now.strftime("%Y-%m-%d %H:%M:%S")
@@ -409,53 +411,74 @@ def executeThePressFromKey(self, context, key):
     strip_exists = False
 
     if sequence_editor is not None:
+        free_channel_found = False
+    
+    while not free_channel_found:
+        strip_exists = False
         for seq in sequence_editor.sequences:
             if seq.channel == current_input_channel and (seq.frame_final_start <= current_frame and seq.frame_final_end >= current_frame):
                 strip_exists = True
+                current_input_channel += 1  # Move to the channel above
+               
                 break
 
-    if not strip_exists:
-     # Add new strip here
-
-   
-        text_strip = bpy.data.scenes[bpy.context.scene.name].sequence_editor.sequences.new_effect(
-            name=image_str,
-            type='TEXT',
-            frame_start=current_frame,
-            frame_end=current_frame + 5,
-            channel=current_input_channel
-        )
+        # If after checking all strips, no strip occupies the current channel at the given frame:
+        if not strip_exists:
+            free_channel_found = True
+            add_strip(image_str, current_frame, current_input_channel, text_strip_visual_text,
+                      text_strip_visual_color, text_strip_visual_location, choosen_tag_color, current_input_channel_base)
 
 
-        text_strip.text = text_strip_visual_text
-        # Set the font and size for the text strip
-        text_strip.font_size = 50.0
-        text_strip.color = text_strip_visual_color
+def add_strip(image_str, current_frame, current_input_channel, text_strip_visual_text, text_strip_visual_color, text_strip_visual_location, choosen_tag_color, current_input_channel_base):
+    text_strip = bpy.data.scenes[bpy.context.scene.name].sequence_editor.sequences.new_effect(
+        name=image_str,
+        type='TEXT',
+        frame_start=current_frame,
+        frame_end=current_frame + 5,
+        channel=current_input_channel
+    )
 
-        text_strip.use_bold = True
-        # Set the position and alignment of the text strip
-        # Set the position of the text strip
-        text_strip.location = text_strip_visual_location
-        text_strip.use_shadow = True
-        text_strip.use_box = True
-        text_strip.shadow_color = (0, 0, 0, 0)  # Set the shadow color
-        # text_strip.wrap_width = 300  # Set the wrap width of the text strip
-        text_strip.align_x = 'LEFT'  # Set the horizontal alignment
-        text_strip.align_y = 'CENTER'  # Set the vertical alignment
-        text_strip.color_tag = choosen_tag_color
+    text_strip.text = text_strip_visual_text
+    # Set the font and size for the text strip
+    text_strip.font_size = 50.0
+    text_strip.color = text_strip_visual_color
 
-        current_frame = bpy.context.scene.frame_current
+    text_strip.use_bold = True
+    # Set the position and alignment of the text strip
+    # Set the position of the text strip
+    text_strip.location = visual_location_from_channel(
+        current_input_channel, current_input_channel_base, text_strip_visual_location)
+    text_strip.use_shadow = True
+    text_strip.use_box = True
+    text_strip.shadow_color = (0, 0, 0, 0)  # Set the shadow color
+    # text_strip.wrap_width = 300  # Set the wrap width of the text strip
+    text_strip.align_x = 'LEFT'  # Set the horizontal alignment
+    text_strip.align_y = 'CENTER'  # Set the vertical alignment
+    text_strip.color_tag = choosen_tag_color
 
-        # If we ever need markers
-        # scene.timeline_markers.new(num_markers_str, frame=current_frame)
+    current_frame = bpy.context.scene.frame_current
 
-        # Initiate the drag of the sequence just created
-        # Check if there is another stripped being dragged first
-        if auto_drag_strip not in bpy.app.handlers.frame_change_post:
-            bpy.app.handlers.frame_change_post.append(auto_drag_strip)
+    seq_editor = bpy.context.scene.sequence_editor
+    channel_to_rename = seq_editor.channels[current_input_channel]
+    # Rename the channel
+    channel_to_rename.name = 'ANNOTATION'
+
+    # If we ever need markers
+    # scene.timeline_markers.new(num_markers_str, frame=current_frame)
+
+    # Initiate the drag of the sequence just created
+    # Check if there is another stripped being dragged first
+    if auto_drag_strip not in bpy.app.handlers.frame_change_post:
+        bpy.app.handlers.frame_change_post.append(auto_drag_strip)
+
+#Sets the visual position of the text based on the channel 
 
 
-
+def visual_location_from_channel(index, current_input_channel_base, text_strip_visual_location):
+    x = 0.05 
+    start_y = text_strip_visual_location[1]
+    increment = 0.07
+    return (x, start_y + (index - current_input_channel_base) * increment)
 
 def executeTheReleaseFromKey(self, context, key):
 

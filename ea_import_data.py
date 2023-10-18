@@ -8,13 +8,37 @@ import os
 from datetime import datetime, timedelta, time
 import re
 import numpy as np
+import math
 
 import collections
 from .ea_constants import Constants
 from .ea_import_helper import decimal_percentage_to_range, move_to_lowest_channel, create3dObjects, move_strips_to_end_at, matlab_to_python_datetime, iso8601_to_python_datetime, downsample_data, detect_delimiter, is_iso8601, is_matlab_datetime, is_day_month_year, find_date_format, find_first_row_with_date, smpte_to_time, get_smtp_at_zero
 
 
-def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_objects, channel_to_import_to, import_type, interpolate_data, interpolate_start, trim_emg_to_masterclock, emg_rain_flow_mvc_collected):
+def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_objects, channel_to_import_to, import_type, interpolate_data, interpolate_start, trim_emg_to_masterclock, emg_rain_flow_mvc_collected, column_emg):
+    
+    def interpolate_color(value):
+        """
+        Interpolate between green, yellow, and red based on the value.
+        value = 0.0 -> Green
+        value = 0.5 -> Yellow
+        value = 1.0 -> Red
+        """
+        # Calculate alpha based on event value
+        alpha = 0.2 + (value * 0.8)
+
+        if math.isclose(value, 0.0):
+            return (0, 1, 0, alpha)  # Green
+        elif math.isclose(value, 0.5):
+            return (1, 1, 0, alpha)  # Yellow
+        elif math.isclose(value, 1.0):
+            return (1, 0, 0, alpha)  # Red
+        elif 0.0 < value < 0.5:
+            lerp_factor = value * 2
+            return (lerp_factor, 1, 0, alpha)  # between Green and Yellow
+        elif 0.5 < value < 1.0:
+            lerp_factor = (value - 0.5) * 2
+            return (1, 1 - lerp_factor, 0, alpha)  # between Yellow and Red
 
     # Ensure the system console is open
 
@@ -143,7 +167,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                         date = iso8601_to_python_datetime(
                             iso_datenum)  # get the date
 
-                        percent_mvc = float(row[1].strip())
+                        percent_mvc = float(row[column_emg].strip())
 
                         # Collect the data for this day
                         day_to_data[date].append(percent_mvc)
@@ -157,7 +181,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                         date = matlab_to_python_datetime(
                             matlab_datenum)  # get the date
 
-                        percent_mvc = float(row[1].strip())
+                        percent_mvc = float(row[column_emg].strip())
 
                         # Collect the data for this day
                         day_to_data[date].append(percent_mvc)
@@ -168,7 +192,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                         # Parse the date
                         date = datetime.strptime(csv_date, "%d-%b-%Y %H:%M:%S")
 
-                        percent_mvc = float(row[1].strip())
+                        percent_mvc = float(row[column_emg].strip())
 
                         # Collect the data for this day
                         day_to_data[date].append(percent_mvc)
@@ -244,7 +268,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                         if overlap:
                             rainflow_layers_counter += 1
 
-                        #Johan
+                        
                         #Calculate the OMNI-RES Equivalent for this data
                         omni_res = decimal_percentage_to_range(
                             kg_range / emg_rain_flow_mvc_collected)
@@ -334,7 +358,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
     move_emg_data_frames = 0
 
     # Figure out the start frame for the emgdata:
-    if import_type == Constants.IMPORT_EMG:
+    if import_type == Constants.IMPORT_EMG and trim_emg_to_masterclock:
         date, activities = next(iter(sorted(day_to_data.items())))
 
         emg_time_str = str(date.time())
@@ -355,7 +379,8 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
             frames_at_zero = frame_from_smpte(smtp_at_zero)
             # print("Frames at zero", frame_at_emg_time_str - frames_at_zero)
             move_emg_data_frames = frame_at_emg_time_str - frames_at_zero
-
+    else:
+        move_emg_data_frames = bpy.context.scene.frame_current
     ######################################################################################
 
     #                                                                                    #
@@ -539,7 +564,10 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
         ######################################################################################
         if import_type == Constants.IMPORT_EMG:
 
+
+
             if not has_created_emg_bar:
+                
                 bpy.context.scene.frame_current = bpy.context.scene.frame_start
                 # Set the frame range and channel
                 frame_start = bpy.context.scene.frame_start
@@ -595,7 +623,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
 
                  # Create the crop
                 crop_strip = bpy.context.scene.sequence_editor.sequences.new_effect(
-                    name="EMG_COVER",
+                    name="EMG_COVER_" + str(column_emg),
                     type='COLOR',
                     channel=channel,
                     frame_start=frame_start,
@@ -603,7 +631,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                 )
                 # Create the image strip
                 strip = bpy.context.scene.sequence_editor.sequences.new_image(
-                    name="EMG_BAR",
+                    name="EMG_BAR_" + str(column_emg),
                     filepath=image_filepath,
                     channel=channel - 1,
                     frame_start=frame_start
@@ -611,7 +639,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
 
                 # Create black color strip
                 color_strip = bpy.context.scene.sequence_editor.sequences.new_effect(
-                    name="Black Border",
+                    name="Black_Border_" + str(column_emg),
                     type='COLOR',
                     channel=channel - 2,
                     frame_start=frame_start,
@@ -662,15 +690,49 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                     # set the crop
 
             push_late_emg = 0
+
+            # Create the colored dot
+            frame_start = bpy.context.scene.frame_start
+            frame_end = bpy.context.scene.frame_end
+
+            for s in bpy.context.scene.sequence_editor.sequences_all:
+                s.select = False
+            # Add a text effect strip
+            bpy.ops.sequencer.effect_strip_add(
+                frame_start=frame_start, frame_end=frame_end, channel=(14 + column_emg), type='TEXT')
+            
+            # Get the text strip
+            text_strip = bpy.context.scene.sequence_editor.active_strip
+            
+            # Set the text content
+            text_strip.text = "•"
+            
+            # Set the font size
+            text_strip.font_size = 2000
+            text_strip.transform.scale_x = 0.069319
+            text_strip.transform.scale_y = 0.069319
+            text_strip.transform.offset_x = strip.transform.offset_x - 1
+            text_strip.transform.offset_y = 139.2
+            
             for event in activities:
+                color = interpolate_color(event)
+                text_strip.color = color
+
+                # Keyframe the color
+                text_strip.keyframe_insert(data_path="color", frame=move_emg_data_frames + frame_start + frame_memory)
                 # print(date.time())
-                bpy.context.scene.sequence_editor.sequences_all["EMG_COVER"].crop.min_y = int(
+                bpy.context.scene.sequence_editor.sequences_all["EMG_COVER_" + str(column_emg)].crop.min_y = int(
                     (1076 * event))
                 # set the keyframe
-                bpy.context.scene.sequence_editor.sequences_all["EMG_COVER"].crop.keyframe_insert(
+                bpy.context.scene.sequence_editor.sequences_all["EMG_COVER_" + str(column_emg)].crop.keyframe_insert(
                     'min_y', frame=move_emg_data_frames + frame_start + frame_memory)
                 frame_start += 1
                 frame_memory += 1  # Move to the next frame
+            
+
+
+               
+               
 
     for key in rainflow_data:
 
@@ -849,6 +911,8 @@ class ImportSomeData(Operator, ImportHelper):
     interpolate_start: IntProperty(name="Interp.Rows/s", default=1000)
     emg_rain_flow_mvc_collected: IntProperty(name="MVC in KG", default=10)
 
+    column_emg: IntProperty(name="EMG Column", default=1)
+
     type: EnumProperty(
         name="File FPS",
         description="Choose FPS for import",
@@ -932,6 +996,7 @@ class ImportSomeData(Operator, ImportHelper):
             self.import_type = Constants.IMPORT_EMG
             layout.prop(self, 'csv_row_start')
             layout.prop(self, 'csv_row_end')
+            layout.prop(self, 'column_emg')
             layout.prop(self, 'interpolate_data')
             layout.prop(self, 'trim_emg_to_masterclock')
             layout.prop(self, 'interpolate_start')
@@ -965,5 +1030,6 @@ class ImportSomeData(Operator, ImportHelper):
             self.interpolate_data,
             self.interpolate_start,
             self.trim_emg_to_masterclock,
-            self.emg_rain_flow_mvc_collected
+            self.emg_rain_flow_mvc_collected,
+            self.column_emg
         )
