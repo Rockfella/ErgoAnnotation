@@ -560,10 +560,12 @@ class ExportSomeData(Operator, ExportHelper):
         ]
         layout = self.layout
         layout.prop(self, "export_duet_risk_report")
-        layout.prop(self, "use_percentage_duet")
-        layout.prop(self, "use_exact_value_duet")
-        layout.prop(self, "duet_options")
+      
         if self.export_duet_risk_report:
+            layout.prop(self, "use_percentage_duet")
+            layout.prop(self, "use_exact_value_duet")
+            layout.prop(self, "duet_options")
+            
             if self.use_percentage_duet:
                 self.report_method_choosen = 'percentage'
                 self.use_exact_value_duet = False
