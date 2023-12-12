@@ -302,17 +302,85 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                         #TODO: IMPORT ABOVE
 
                     elif is_day_month_year(csv_date):
-
+                        print("is_day_month_year")
                         datenum_start = row[3]
                         datenum_end = row[4]
 
                         start_time = datetime.strptime(
-                            datenum_start)  # get the date
+                            datenum_start, "%d-%b-%Y %H:%M:%S")  # get the date
 
                         end_time = datetime.strptime(
-                            datenum_end)
-                        # TODO: IMPORT ABOVE
+                            datenum_end,  "%d-%b-%Y %H:%M:%S")
 
+                        # Convert the start_time input time to SMPT
+                        hh = start_time.hour
+                        mm = start_time.minute
+                        ss = start_time.second
+                        ff = "00"
+                        start_time_final = f"{hh:02}:{mm:02}:{ss:02}:{ff}"
+
+                        # Convert the start_time input time to SMPT
+                        hh_end = end_time.hour
+                        mm_end = end_time.minute
+                        ss_end = end_time.second
+                        ff = "00"
+                        end_time_final = f"{hh_end:02}:{mm_end:02}:{ss_end:02}:{ff}"
+
+                        # Time converted to frames
+                        frame_at_start_time = frame_from_smpte(
+                            start_time_final)
+                        frame_at_end_time = frame_from_smpte(end_time_final)
+
+                        # Input columns
+                        pre_count = row[0].strip()
+                        pre_range = row[1].strip()
+                        pre_mean = row[2].strip()
+                        # Check if the input contains "." or ",""
+                        if ',' in pre_count:
+                            pre_count = pre_count.replace(',', '.')
+
+                        if ',' in pre_range:
+                            pre_range = pre_range.replace(',', '.')
+
+                        if ',' in pre_mean:
+                            pre_mean = pre_mean.replace(',', '.')
+
+                        nr_count = float(pre_count)
+                        kg_range = float(pre_range)
+                        kg_mean = float(pre_mean)
+
+                        overlap = False
+                        overlap_number = 0
+                        for key in rainflow_data:
+                            for interval in rainflow_data[key]:
+                                # Check if the time ranges overlap
+                                if (start_time <= interval['end_time']) and (end_time >= interval['start_time']):
+                                    overlap = True
+                                    overlap_number += 1
+                                    # break
+
+                        if overlap:
+                            rainflow_layers_counter += 1
+
+                        # Calculate the OMNI-RES Equivalent for this data
+                        omni_res = decimal_percentage_to_range(
+                            kg_range / emg_rain_flow_mvc_collected)
+
+                        results_dict = {
+                            'count': nr_count,
+                            'range': kg_range,
+                            'mean': kg_mean,
+                            'start_time': start_time,
+                            'start_frame': frame_at_start_time,
+                            'end_time': end_time,
+                            'end_frame': frame_at_end_time,
+                            'overlap_number': overlap_number,
+                            'omni_res': omni_res
+                        }
+
+                        # Collect the data for this
+                        rainflow_data[rainflow_layers_counter].append(
+                            results_dict)
 
 
                         
@@ -698,28 +766,28 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
             for s in bpy.context.scene.sequence_editor.sequences_all:
                 s.select = False
             # Add a text effect strip
-            bpy.ops.sequencer.effect_strip_add(
-                frame_start=frame_start, frame_end=frame_end, channel=(14 + column_emg), type='TEXT')
+            #bpy.ops.sequencer.effect_strip_add(
+            #    frame_start=frame_start, frame_end=frame_end, channel=(14 + column_emg), type='TEXT')
             
             # Get the text strip
-            text_strip = bpy.context.scene.sequence_editor.active_strip
-            
-            # Set the text content
-            text_strip.text = "•"
-            
-            # Set the font size
-            text_strip.font_size = 2000
-            text_strip.transform.scale_x = 0.069319
-            text_strip.transform.scale_y = 0.069319
-            text_strip.transform.offset_x = strip.transform.offset_x - 1
-            text_strip.transform.offset_y = 139.2
+            #text_strip = bpy.context.scene.sequence_editor.active_strip
+            #
+            ## Set the text content
+            #text_strip.text = "•"
+            #
+            ## Set the font size
+            #text_strip.font_size = 2000
+            #text_strip.transform.scale_x = 0.069319
+            #text_strip.transform.scale_y = 0.069319
+            #text_strip.transform.offset_x = strip.transform.offset_x - 1
+            #text_strip.transform.offset_y = 139.2
             
             for event in activities:
                 color = interpolate_color(event)
-                text_strip.color = color
+                #text_strip.color = color
 
                 # Keyframe the color
-                text_strip.keyframe_insert(data_path="color", frame=move_emg_data_frames + frame_start + frame_memory)
+                #text_strip.keyframe_insert(data_path="color", frame=move_emg_data_frames + frame_start + frame_memory)
                 # print(date.time())
                 bpy.context.scene.sequence_editor.sequences_all["EMG_COVER_" + str(column_emg)].crop.min_y = int(
                     (1076 * event))

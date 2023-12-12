@@ -7,7 +7,7 @@ import csv
 from .ea_constants import Constants
 from .ea_constants import frame_from_smpte
 import os
-
+import numpy as np
 
 def get_fill_color(value_scale):
     def interpolate(start, end, fraction):
@@ -44,6 +44,180 @@ def rgb_to_hex(rgb):
     return "#{:02x}{:02x}{:02x}".format(rgb[0], rgb[1], rgb[2])
 
 
+
+def create_HAL_graph_svg_with_points(points, filepath, title, additional_text):
+    # Dimensions for the SVG
+    svg_width, svg_height = 960, 600
+
+    show_individual_average = False
+
+
+    # Scaling factors (assuming your data ranges from 0 to 10)
+    x_scale = (svg_width - 200) / 10  # Adjusted to provide space for labels
+    y_scale = (svg_height - 200) / 10
+
+    # TLV and action limit
+    tlv_limit = [(1.0, 5.04) , (9.0, 0.56)]
+    action_limit = [(1.0, 3.04), (6.2, 0.0)]
+
+    # Start building the SVG content
+    svg_elements = []
+     # Add the title at the top, centered
+    svg_elements.append(f'<text x="{svg_width / 2}" y="50" font-family="Arial" font-size="24" text-anchor="middle">{title}</text>')
+
+    # Draw axes
+    origin_x, origin_y = 100, svg_height - 100  # Adjusted origin
+    svg_elements.append(f'<line x1="{origin_x}" y1="{origin_y}" x2="{svg_width - 100}" y2="{origin_y}" style="stroke:black;stroke-width:2" />')  # X-axis
+    svg_elements.append(f'<line x1="{origin_x}" y1="{origin_y}" x2="{origin_x}" y2="100" style="stroke:black;stroke-width:2" />')  # Y-axis
+
+    # Add labels for axes
+    svg_elements.append(f'<text x="{svg_width / 2}" y="{svg_height - 50}" font-family="Arial" font-size="20" text-anchor="middle">Hand Activity Level (HAL)</text>')  # X-axis label
+    svg_elements.append(f'<text x="30" y="{svg_height / 2}" font-family="Arial" font-size="20" text-anchor="middle" transform="rotate(-90,30,{svg_height / 2})">Normalized Peak Force (NPF)</text>')  # Y-axis label
+
+    # Add number labels on axes
+    for i in range(11):
+        # X-axis labels
+        svg_elements.append(f'<text x="{origin_x + i * x_scale}" y="{origin_y + 20}" font-family="Arial" font-size="15" text-anchor="middle">{i}</text>')
+        # Y-axis labels
+        svg_elements.append(f'<text x="{origin_x - 30}" y="{origin_y - i * y_scale}" font-family="Arial" font-size="15" text-anchor="end" alignment-baseline="middle">{i}</text>')
+
+
+
+    # Function to scale points
+    def scale_point(point):
+        return origin_x + point[0] * x_scale, origin_y - point[1] * y_scale
+
+    # Plot the TLV line
+    tlv_scaled_start = scale_point(tlv_limit[0])
+    tlv_scaled_end = scale_point(tlv_limit[1])
+    svg_elements.append(f'<line x1="{tlv_scaled_start[0]}" y1="{tlv_scaled_start[1]}" x2="{tlv_scaled_end[0]}" y2="{tlv_scaled_end[1]}" style="stroke:blue;stroke-width:2" />')
+    svg_elements.append(f'<text x="{(tlv_scaled_start[0] + tlv_scaled_end[0]) / 2}" y="{(tlv_scaled_start[1] + tlv_scaled_end[1]) / 2 - 10}" font-family="Arial" font-size="15" fill="blue">TLV</text>')
+
+    # Plot the action limit line
+    action_scaled_start = scale_point(action_limit[0])
+    action_scaled_end = scale_point(action_limit[1])
+    svg_elements.append(f'<line x1="{action_scaled_start[0]}" y1="{action_scaled_start[1]}" x2="{action_scaled_end[0]}" y2="{action_scaled_end[1]}" style="stroke:green;stroke-width:2; stroke-dasharray:5,5" />')
+
+    svg_elements.append(f'<text x="{(action_scaled_start[0] + action_scaled_end[0]) / 2}" y="{(action_scaled_start[1] + action_scaled_end[1]) / 2 - 10}" font-family="Arial" font-size="15" fill="green">Action Limit</text>')
+
+
+
+    def check_point_position(HAL, NPF):
+        # Calculate NPF for the TLV and Action Limit lines at the given HAL
+        NPF_TLV = 5.6 - 0.56 * HAL
+        NPF_Action_Limit = 3.6 - 0.56 * HAL
+
+        # Check if the point is above the TLV line
+        above_TLV = NPF > NPF_TLV
+
+        # Check if the point is above the Action Limit line
+        above_Action_Limit = NPF > NPF_Action_Limit
+
+        return above_TLV, above_Action_Limit
+
+
+    risk_categories = ["BELOW ACTION LIMIT - LOW", "ABOVE ACTION LIMIT - MEDIUM", "ABOVE TLV LIMIT - HIGH" ]    
+    
+    #Determine which category of risk this paricular avarage is 
+    is_what_risk = risk_categories[0]
+    is_what_risk_global = risk_categories[0]
+
+    count = 0
+    # Plot the points from the list
+    for x, y, name in points:
+
+        fill_color = "red"
+        size_plupp = 12
+        
+        #This is the avarage risk 
+        if count == 0:
+            fill_color = "rgb(77,239,142)"
+            size_plupp = 14
+            # Check where we are ate
+            above_TLV, above_Action_Limit = check_point_position(x, y)
+
+            print(f"Point is above TLV line: {above_TLV}")
+            print(f"Point is above Action Limit line: {above_Action_Limit}")
+
+            if above_Action_Limit:
+                is_what_risk = risk_categories[1]
+            if above_TLV:
+                is_what_risk = risk_categories[2]
+
+        elif count == 1:
+            fill_color = "rgb(25,143,209)"
+            size_plupp = 12
+
+             # Check where we are ate
+            above_TLV, above_Action_Limit = check_point_position(x, y)
+
+            print(f"Point is above TLV line: {above_TLV}")
+            print(f"Point is above Action Limit line: {above_Action_Limit}")
+
+            if above_Action_Limit:
+                is_what_risk_global = risk_categories[1]
+            if above_TLV:
+                is_what_risk_global = risk_categories[2]
+
+
+
+        elif count == 2:
+            fill_color = "rgb(236,77,239)"
+            size_plupp = 12
+        elif count == 3:
+            fill_color = "rgb(255,34,34)"
+            size_plupp = 12
+
+        elif count == 4:
+            fill_color = "rgb(0,0,0)"
+            size_plupp = 8
+
+        scaled_x = origin_x + float(x) * x_scale
+        scaled_y = origin_y - float(y) * y_scale
+
+        warning_color = "green"
+        if is_what_risk == risk_categories[0]:
+            warning_color = "green"
+        elif is_what_risk == risk_categories[1]:
+            warning_color = "yellow"
+        elif is_what_risk == risk_categories[2]:
+            warning_color = "red"
+
+
+        #Remove if Individual grips are of interest
+        if count >= 1:
+            svg_elements.append(f'<circle cx="{scaled_x}" cy="{scaled_y}" r="{size_plupp}" style="fill:{fill_color};stroke:black;stroke-width:1" />')
+            svg_elements.append(f'<text x="{svg_width - 200 }" y="{(svg_height / 3 + (25 * count)) }" font-family="Arial" font-size="{size_plupp + 5}" fill="{fill_color}">{name}</text>')
+
+        count += 1
+
+    if show_individual_average:
+        #FINAL ROW RESULTS
+        svg_elements.append(f'<text x="{svg_width / 2 + 1}" y="{svg_height - 20 + 1}" fill="black" font-family="Arial" font-size="16" text-anchor="middle">AVERAGE IS {is_what_risk}</text>')  # X-axis label
+        svg_elements.append(f'<text x="{svg_width / 2}" y="{svg_height - 20}" fill="{warning_color}" font-family="Arial" font-size="16" text-anchor="middle">AVERAGE IS {is_what_risk}</text>')  # X-axis label
+
+     #FINAL ROW RESULTS
+    svg_elements.append(f'<text x="{svg_width / 2 + 1}" y="{svg_height - 1 + 1}" fill="black" font-family="Arial" font-size="16" text-anchor="middle">GLOBAL AVERAGE IS {is_what_risk_global}</text>')  # X-axis label
+    svg_elements.append(f'<text x="{svg_width / 2}" y="{svg_height - 1}" fill="{warning_color}" font-family="Arial" font-size="16" text-anchor="middle">GLOBAL AVERAGE IS {is_what_risk_global}</text>')  # X-axis label
+
+   # Combine all elements
+    svg_content = f"""<?xml version="1.0" encoding="UTF-8"?>
+    <svg width="{svg_width}px" height="{svg_height}px" viewBox="0 0 {svg_width} {svg_height}" xmlns="http://www.w3.org/2000/svg">
+        {''.join(svg_elements)}
+    </svg>
+    """
+
+    # Save the SVG data to a file
+    with open(filepath, 'w') as f:
+        f.write(svg_content)
+
+
+
+
+
+
+
+
 def create_a4_svg_with_text_and_table(filepath, text_content, column_1_data, column_2_data, column_3_data, column_4_data, column_5_data, str_list_to_report):
     # Define the SVG structure for an A4 paper
     a4_width = 2100  # in mm
@@ -68,7 +242,7 @@ def create_a4_svg_with_text_and_table(filepath, text_content, column_1_data, col
 
             # Create cell rectangle
             fill_color = "lightgray" if row == 0 else "white"
-            print("The sum of the column 3 is")
+            #print("The sum of the column 3 is")
             the_sum_of_cumulative = sum(column_3_data)
             probability = 0.0
             if the_sum_of_cumulative > 0.0:
@@ -204,7 +378,7 @@ def create_a4_svg_with_text_and_table(filepath, text_content, column_1_data, col
         f.write(svg_content)
 
 
-def write_some_data(context, filepath, export_duet_risk_report, report_method_choosen, percentage_of_workday, total_hours_of_workday, duet_options):
+def write_some_data(context, filepath, export_duet_risk_report, report_method_choosen, percentage_of_workday, total_hours_of_workday, duet_options, export_HAL_risk_report):
     print("running write_some_data...")
 
     scene = bpy.context.scene
@@ -262,6 +436,8 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
             elif filter_name[0] == Constants.FREE_CHANNEL[2]:
                 sir_data_FREE_CHANNEL.append(
                     (start_frame, end_frame, filer_name_one_removed_spaces))
+                
+
 
     # Sort the list by start_frame
     sir_data_DUET_L.sort()
@@ -390,9 +566,14 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
         duet_r_counts = get_risk_counts(sir_data_DUET_R)
         duet_l_counts = get_risk_counts(sir_data_DUET_L)
 
+        hand_text = "_right_hand"
+        if duet_options == "OPTION1":  # DUET Right selected
+               hand_text = "_right_hand"
+        elif duet_options == "OPTION2":
+               hand_text = "_left_hand"
         # new filename
         base_name, ext = os.path.splitext(filepath)
-        new_filepath = f"{base_name}_duet_risk_report.csv"
+        new_filepath = f"{base_name}_duet_risk_report{hand_text}.csv"
 
         column_1_svg_data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         column_2_svg_data = []
@@ -400,46 +581,100 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
         column_4_svg_data = []
         column_5_svg_data = []
 
+
+
+
+
+
         # Save the risk report to the new csv file
         with open(new_filepath, 'w', encoding='utf-8', newline='') as f:
             writer = csv.writer(f, delimiter='\t')  # Use tab as delimiter
-    
-            # Write DUET_R section
-            writer.writerow(["DUET_R"])
-            writer.writerow(["Value", "Count", "Cumulative Damage"])
+            # Get the active scene
+            scene = bpy.context.scene
+
+            # Calculate the total number of frames
+            total_frames = scene.frame_end - scene.frame_start + 1
+
+            # Calculate the effective frames per second (FPS)
+            effective_fps = scene.render.fps / scene.render.fps_base
+            effective_fps_list = [f"{(scene.render.fps / scene.render.fps_base):.2f}"]
+          
+            # Calculate the duration in seconds
+            duration_seconds = total_frames / effective_fps
+
+            # Convert the duration to minutes
+            duration_minutes = [f"{(duration_seconds / 60) :.2f}"]
+           
+            righthand = True
+            if duet_options == "OPTION1":  # DUET Right selected
+                writer.writerow(["DUET_R"])
+                righthand = True
+                print("DUET_RIGHT REPORT SELECTED")
+            elif duet_options == "OPTION2":
+                writer.writerow(["DUET_L"])
+                righthand = False
+                print("DUET_LEFT REPORT SELECTED")
             
+            #writer.writerow(["Value", "Count", "Cumulative Damage"])
+
+            column_headers = ['DUET_TOTAL_CUMULATIVE', 'Duration(min)', 'FPS', 'OMNI-RES:']
+            column_1_data = []
+            column_2_data = []
+            column_3_data = []
 
             for i in range(11):
-                count_value = int(duet_r_counts[str(i)] * multiplication_value)
+                if righthand:
+                    count_value = int(duet_r_counts[str(i)] * multiplication_value)
+                else:
+                    count_value = int(duet_l_counts[str(i)] * multiplication_value)
+                
                 cumulative = format(round(damage_per_cycle_weighting[i] * count_value, 5), ",.5f")
-                writer.writerow([str(i), " " + str(count_value), cumulative])
 
-                if duet_options == "OPTION1":  # DUET Right selected
-                    column_2_svg_data.append(count_value)
-                    column_3_svg_data.append(float(cumulative))
-    
-            writer.writerow([])  # Empty line for separation
+                column_headers.append(f'O-RE {i}:')
+                
+                column_2_data.append(str(count_value))
+                column_3_data.append(cumulative)
 
-            # Write DUET_L section
-            writer.writerow(["DUET_L"])
-            writer.writerow(["Value", "Count", "Cumulative Damage"])
-            for i in range(11):
-                count_value = int(duet_l_counts[str(i)] * multiplication_value)
-                cumulative = format(round(damage_per_cycle_weighting[i] * count_value, 5), ",.5f")
-                writer.writerow([str(i), " " + str(count_value), cumulative])
+                #writer.writerow([str(i), " " + str(count_value), cumulative])
+                
+               
+                column_2_svg_data.append(count_value)
+                column_3_svg_data.append(float(cumulative))
 
-                if duet_options == "OPTION2":  # DUET Left selected
-                    column_2_svg_data.append(count_value)
-                    column_3_svg_data.append(float(cumulative))
+               
+            # Remove commas and convert each string to a float before summing
+            total_cumulative_damage = sum(float(cum.replace(',', '')) for cum in column_3_data)
+
+            # Append the total to column_1_data
+            column_1_data.append(f"{total_cumulative_damage:.5f}")
+
+            writer.writerow(column_headers)
+           
+            writer.writerow(column_1_data + duration_minutes + effective_fps_list + [''] + column_2_data)
+          
+
+            #writer.writerow([])  # Empty line for separation
+
+            ## Write DUET_L section
+            #writer.writerow(["DUET_L"])
+            #writer.writerow(["Value", "Count", "Cumulative Damage"])
+            #for i in range(11):
+            #    count_value = int(duet_l_counts[str(i)] * multiplication_value)
+            #    cumulative = format(round(damage_per_cycle_weighting[i] * count_value, 5), ",.5f")
+            #    writer.writerow([str(i), " " + str(count_value), cumulative])
+            #    if duet_options == "OPTION2":  # DUET Left selected
+            #        column_2_svg_data.append(count_value)
+            #        column_3_svg_data.append(float(cumulative))
     
 
         # Specify where you want to save the SVG
-        svg_filepath = f"{base_name}_duet_risk_report.svg"
+        svg_filepath = f"{base_name}_duet_risk_report{hand_text}.svg"
 
         for i in range(11):
             if len(duet_r_counts) > len(duet_l_counts):
                 # Create the SVG with text and table
-                print("fff")
+                print("")
+
         duet_report_titel = ""
         if duet_options == "OPTION1":  # DUET Right selected
             duet_report_titel = "DUET Right Hand Scores"
@@ -447,8 +682,174 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
             duet_report_titel = "DUET Left Hand Scores"
         create_a4_svg_with_text_and_table(svg_filepath, duet_report_titel, column_1_svg_data,
                                           column_2_svg_data, column_3_svg_data, column_3_svg_data, column_3_svg_data, str_list_to_report)
+
+
+    if export_HAL_risk_report:   
+        #print("")
+        HAL_raw_data_L = sir_data_DUET_L
+        HAL_raw_data_R = sir_data_DUET_R
         
+
+        choosen_hand = HAL_raw_data_R
+
+        ## TODO: Make sure we change the name here
+        if duet_options == "OPTION1":  # DUET Right selected
+               hand_text = "_right_hand"
+
+        elif duet_options == "OPTION2":
+               hand_text = "_left_hand"
+               choosen_hand = HAL_raw_data_L
+
+        svg_hal_filepath = f"{base_name}_HAL_risk_report{hand_text}.svg"
+
+        list_hal_collected = []
+
+        previous_grip_data = []
+
+        # GLOBAL CALC For Peter
+        global_on_time = 0
+        global_off_time = 0
+        global_npf = 0
+
+        for grip in choosen_hand:
+            
+
+            if len(previous_grip_data) > 0:
+
+                duty_cycle_onTime = previous_grip_data[1] - previous_grip_data[0]
+                duty_cycle_offTime = grip[0] - previous_grip_data[1] 
+
+                global_on_time += duty_cycle_onTime
+                global_off_time += duty_cycle_offTime
+
+                duty_cycle = (duty_cycle_onTime / (duty_cycle_onTime + duty_cycle_offTime)) * 100
+
+                #in real time?
+                ti_duty_cycle_onTime = duty_cycle_onTime / effective_fps
+                ti_duty_cycle_offTime = duty_cycle_offTime / effective_fps
+
+                grip_frequency = 1 / (ti_duty_cycle_onTime + ti_duty_cycle_offTime)
+
+                grip_HAL = calculate_HAL(duty_cycle, grip_frequency)
+
+                grip_NPF = previous_grip_data[2]
+                
+                #Add to global variables
+                global_npf += int(grip_NPF)
+
+
+                list_hal_collected.append((grip_HAL, grip_NPF))
+
+            previous_grip_data = grip
+
+
+        #print("list_hal_collected")
+        #print(list_hal_collected)
+
+
+        display_points_for_HAL_graph = []
         
+
+
+        # Separate the tuples into two lists
+        first_elements = [float(tup[0]) for tup in list_hal_collected]
+        second_elements = [float(tup[1]) for tup in list_hal_collected]
+
+        # Calculate averages
+        avg_HAL_element = np.mean(first_elements)
+        avg_NPF_element = np.mean(second_elements)
+
+
+
+        # Calculate percentiles
+        percentiles = [50, 70, 90]
+        percentiles_first_element = np.percentile(first_elements, percentiles)
+        percentiles_second_element = np.percentile(second_elements, percentiles)
+
+        #append avrage
+        display_points_for_HAL_graph.append((avg_HAL_element, avg_NPF_element, 'Indiv. Grip Average'))
+
+        #TODO: WARNING, IF YOU WANT THESE TO GO IN THEY NEED TO BE MOVED FURTHER DOWN
+        #append percentile 70
+        #display_points_for_HAL_graph.append((percentiles_first_element[0], percentiles_second_element[0], '50 - percentile'))
+
+        #append percentile 60
+        #display_points_for_HAL_graph.append((percentiles_first_element[1], percentiles_second_element[1], '70 - percentile'))
+
+        #append percentile 50
+        #display_points_for_HAL_graph.append((percentiles_first_element[2], percentiles_second_element[2], '90 - percentile'))
+
+
+         #ADDING PETERS REQUEST OF OTHER CALCULATION of FREQUENCY
+        #------------------------------------------------------------------------------------------------------------------------------------
+
+
+       
+        #Added for Peters for comparison
+        #------------------------------------------------------------------------------------------------------------
+        #The regular qay of calculating frequency
+        peters_list_hal_collected = []
+
+        number_of_cycles = len(choosen_hand)
+        # Calculate the total number of frames
+        total_frames = scene.frame_end - scene.frame_start + 1
+    
+        # Calculate the effective frames per second (FPS)
+        effective_fps = scene.render.fps / scene.render.fps_base
+        
+            
+        # Calculate the duration in seconds
+        duration_seconds = total_frames / effective_fps
+        
+
+        global_grip_frequency = number_of_cycles / duration_seconds
+
+        global_duty_cycle = (global_on_time / (global_on_time + global_off_time)) * 100
+
+
+        global_grip_HAL = calculate_HAL(global_duty_cycle, global_grip_frequency)
+        
+        global_calculated_npf = global_npf / number_of_cycles
+
+
+        #grip_HAL_different_frequency = calculate_HAL(duty_cycle, grip_frequency_different)
+
+        #peters_list_hal_collected.append((grip_HAL_different_frequency, grip_NPF))
+        #------------------------------------------------------------------------------------------------------------
+        
+        #peters_first_elements = [float(tup[0]) for tup in peters_list_hal_collected]
+        #peters_second_elements = [float(tup[1]) for tup in peters_list_hal_collected]
+
+        #peters_avg_HAL_element = np.mean(peters_first_elements)
+        #peters_avg_NPF_element = np.mean(peters_second_elements)
+        #append PETERS FREQUENCY REQUEST
+        display_points_for_HAL_graph.append((global_grip_HAL, global_calculated_npf, 'Global Average'))
+
+       
+
+        #------------------------------------------------------------------------------------------------------------------------------------
+        ## Create the actual graph, with all grips
+        #create_HAL_graph_svg_with_points(list_hal_collected, svg_hal_filepath)  
+
+
+        #TODO: Change backend for options not being HAL
+        hal_report_titel = ""
+        if duet_options == "OPTION1":  # DUET Right selected
+            hal_report_titel = "HAL/TLV Right Hand Scores"
+        elif duet_options == "OPTION2":
+            hal_report_titel = "HAL/TLV Left Hand Scores"
+
+        #Taken from DUET
+        additional_text = str_list_to_report
+
+         # Create the actual graph
+        create_HAL_graph_svg_with_points(display_points_for_HAL_graph, svg_hal_filepath, hal_report_titel, additional_text)                   
+
+
+
+
+        
+
 
             
     return {'FINISHED'}
@@ -474,6 +875,26 @@ def due_probability(cd):
 
 
 
+def calculate_HAL(D, F):
+    """
+    Calculate the HAL value based on the given D and F values.
+    
+    Args:
+    D (float): A numerical value.
+    F (float): Another numerical value.
+
+    Returns:
+    float: The calculated HAL value.
+    """
+    # Ensure D and F are greater than 0 to avoid math domain errors
+    if D <= 0 or F <= 0:
+        return 0
+
+    # Calculate HAL using the provided formula
+    h_hal = 6.56 * math.log(D) * ((F ** 1.31) / (1 + 3.18 * F ** 1.31))
+
+   
+    return h_hal
 
 class ExportSomeData(Operator, ExportHelper):
     """This appears in the tooltip of the operator and in the generated docs"""
@@ -495,6 +916,12 @@ class ExportSomeData(Operator, ExportHelper):
         name="Create DUET Report",
         description="Exports a SVG detailing the DUET Risks",
         default=True,
+    )
+
+    export_HAL_risk_report: BoolProperty(
+        name="Create HAL/TLV Report",
+        description="Exports a SVG detailing the HAL Risks",
+        default=False,
     )
 
     use_percentage_duet: BoolProperty(
@@ -560,7 +987,9 @@ class ExportSomeData(Operator, ExportHelper):
         ]
         layout = self.layout
         layout.prop(self, "export_duet_risk_report")
-      
+
+        layout.prop(self, "export_HAL_risk_report")
+
         if self.export_duet_risk_report:
             layout.prop(self, "use_percentage_duet")
             layout.prop(self, "use_exact_value_duet")
@@ -584,7 +1013,7 @@ class ExportSomeData(Operator, ExportHelper):
 
 
     def execute(self, context):
-        return write_some_data(context, self.filepath, self.export_duet_risk_report, self.report_method_choosen, self.percentage_of_workday, self.total_hours_of_workday, self.duet_options)
+        return write_some_data(context, self.filepath, self.export_duet_risk_report, self.report_method_choosen, self.percentage_of_workday, self.total_hours_of_workday, self.duet_options, self.export_HAL_risk_report)
 
 
 # Only needed if you want to add into a dynamic menu
