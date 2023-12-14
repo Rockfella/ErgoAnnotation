@@ -2,8 +2,8 @@ import bpy
 class Constants:
 
     #INPUT TYPES, id:, channel:
-    DUET_LEFT = (1, 5, "DUET LEFT")
-    DUET_RIGHT = (2, 6, "DUET RIGHT")
+    HAND_EX_R = (1, 5, "HAND EXERTION R")
+    HAND_EX_L = (2, 6, "HAND EXERTION L")
     FREE_CHANNEL = (3, 7, "FC")
     
     IMPORT_ACTIPASS = (1, "ActiPass")
@@ -15,17 +15,17 @@ class Constants:
     OMNI_RES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] 
 
     #str_OMNI_RES name, label, value  
-    str_OMNI_RES = [('OMNI_RES_0', 'OMNI-RES 0', '0'),
-                     ('OMNI_RES_1', 'OMNI-RES 1', '1'),
-                     ('OMNI_RES_2', 'OMNI-RES 2', '2'),
-                     ('OMNI_RES_3', 'OMNI-RES 3', '3'),
-                     ('OMNI_RES_4', 'OMNI-RES 4', '4'),
-                     ('OMNI_RES_5', 'OMNI-RES 5', '5'),
-                     ('OMNI_RES_6', 'OMNI-RES 6', '6'),
-                     ('OMNI_RES_7', 'OMNI-RES 7', '7'),
-                     ('OMNI_RES_8', 'OMNI-RES 8', '8'),
-                     ('OMNI_RES_9', 'OMNI-RES 9', '9'),
-                     ('OMNI_RES_10', 'OMNI-RES 10', '10')]
+    str_MAGNITUDE = [('MAGNITUDE_0', 'MAGNITUDE 0', '0'),
+                     ('MAGNITUDE_1', 'MAGNITUDE 1', '1'),
+                     ('MAGNITUDE_2', 'MAGNITUDE 2', '2'),
+                     ('MAGNITUDE_3', 'MAGNITUDE 3', '3'),
+                     ('MAGNITUDE_4', 'MAGNITUDE 4', '4'),
+                     ('MAGNITUDE_5', 'MAGNITUDE 5', '5'),
+                     ('MAGNITUDE_6', 'MAGNITUDE 6', '6'),
+                     ('MAGNITUDE_7', 'MAGNITUDE 7', '7'),
+                     ('MAGNITUDE_8', 'MAGNITUDE 8', '8'),
+                     ('MAGNITUDE_9', 'MAGNITUDE 9', '9'),
+                     ('MAGNITUDE_10', 'MAGNITUDE 10', '10')]
 
 
     str_CALIBRATIONS = [('calibration_shake_IMU', 'Shake IMU', 'Shake IMU'),
@@ -70,7 +70,7 @@ class Constants:
     }
 
 
-def pickTagColorForDuet(key):
+def pickTagColorForHandExertions(key):
 
     # ColorTag for num hotkeys
     int_key = int(key)
@@ -124,7 +124,7 @@ def pickTagColorForFreeMode(key):
         return color_array[3]  # green
 
 
-def pickVisualTextColorForDuet(key):
+def pickVisualTextColorForHandExertions(key):
 
     # ColorTag for num hotkeys
     int_key = int(key)

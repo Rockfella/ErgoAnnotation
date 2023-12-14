@@ -378,7 +378,7 @@ def create_a4_svg_with_text_and_table(filepath, text_content, column_1_data, col
         f.write(svg_content)
 
 
-def write_some_data(context, filepath, export_duet_risk_report, report_method_choosen, percentage_of_workday, total_hours_of_workday, duet_options, export_HAL_risk_report):
+def write_some_data(context, filepath, export_duet_risk_report, report_method_choosen, percentage_of_workday, total_hours_of_workday, duet_options, export_HAL_risk_report, magnitude_scale_options):
     print("running write_some_data...")
 
     scene = bpy.context.scene
@@ -406,8 +406,8 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
         data_master_clock.append(smpte_string_current)
 
     # Building a list of strips with their range and append them to the right dict
-    sir_data_DUET_L = []
-    sir_data_DUET_R = []
+    sir_data_HAND_EX_L = []
+    sir_data_HAND_EX_R = []
     sir_data_FREE_CHANNEL = []
 
     # Sorting sequence_strips based on channel values in descending order
@@ -425,12 +425,12 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
                 " ", "")
 
             # Sort the strip.names into the right cathegories
-            if filter_name[0] == Constants.DUET_LEFT[2]:
-                sir_data_DUET_L.append(
+            if filter_name[0] == Constants.HAND_EX_L[2]:
+                sir_data_HAND_EX_L.append(
                     (start_frame, end_frame, filer_name_one_removed_spaces))
 
-            elif filter_name[0] == Constants.DUET_RIGHT[2]:
-                sir_data_DUET_R.append(
+            elif filter_name[0] == Constants.HAND_EX_R[2]:
+                sir_data_HAND_EX_R.append(
                     (start_frame, end_frame, filer_name_one_removed_spaces))
 
             elif filter_name[0] == Constants.FREE_CHANNEL[2]:
@@ -440,31 +440,34 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
 
 
     # Sort the list by start_frame
-    sir_data_DUET_L.sort()
-    sir_data_DUET_R.sort()
+    sir_data_HAND_EX_L.sort()
+    sir_data_HAND_EX_R.sort()
     sir_data_FREE_CHANNEL.sort()
 
     # Building a dictionary of active strips for each frame
-    active_strips_data_DUET_L = {}
-    active_strips_data_DUET_R = {}
+    active_strips_data_HAND_EX_L = {}
+    active_strips_data_HAND_EX_R = {}
     active_strips_data_FREE_CHANNEL = {}
+
+
+
     for frame in range(scene.frame_start, scene.frame_end + 1):
-        active_strips_data_DUET_L[frame] = [name for start, end,
-                                            name in sir_data_DUET_L if start <= frame < end]
-        active_strips_data_DUET_R[frame] = [name for start, end,
-                                            name in sir_data_DUET_R if start <= frame < end]
+        active_strips_data_HAND_EX_L[frame] = [name for start, end,
+                                            name in sir_data_HAND_EX_L if start <= frame < end]
+        active_strips_data_HAND_EX_R[frame] = [name for start, end,
+                                            name in sir_data_HAND_EX_R if start <= frame < end]
         active_strips_data_FREE_CHANNEL[frame] = [name for start, end,
                                                   name in sir_data_FREE_CHANNEL if start <= frame < end]
 
-    data_data_DUET_L = []
-    data_data_DUET_R = []
+    data_data_HAND_EX_L = []
+    data_data_HAND_EX_R = []
     data_FREE_CHANNEL = []
 
-    for frame, strips in active_strips_data_DUET_L.items():
-        data_data_DUET_L.append(strips)
+    for frame, strips in active_strips_data_HAND_EX_L.items():
+        data_data_HAND_EX_L.append(strips)
 
-    for frame, strips in active_strips_data_DUET_R.items():
-        data_data_DUET_R.append(strips)
+    for frame, strips in active_strips_data_HAND_EX_R.items():
+        data_data_HAND_EX_R.append(strips)
 
     for frame, strips in active_strips_data_FREE_CHANNEL.items():
         data_FREE_CHANNEL.append(strips)
@@ -472,8 +475,8 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
     # Combine all lists into a dict that speeds up the csv export
     data = {
         "master_clock": data_master_clock,
-        "DUET_L": data_data_DUET_L,
-        "DUET_R": data_data_DUET_R,
+        "HAND_EX_L": data_data_HAND_EX_L,
+        "HAND_EX_R": data_data_HAND_EX_R,
         "FREE_CHANNEL": data_FREE_CHANNEL
     }
 
@@ -563,8 +566,8 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
                     counts[risk_value] += 1
             return counts
 
-        duet_r_counts = get_risk_counts(sir_data_DUET_R)
-        duet_l_counts = get_risk_counts(sir_data_DUET_L)
+        duet_r_counts = get_risk_counts(sir_data_HAND_EX_R)
+        duet_l_counts = get_risk_counts(sir_data_HAND_EX_L)
 
         hand_text = "_right_hand"
         if duet_options == "OPTION1":  # DUET Right selected
@@ -573,7 +576,7 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
                hand_text = "_left_hand"
         # new filename
         base_name, ext = os.path.splitext(filepath)
-        new_filepath = f"{base_name}_duet_risk_report{hand_text}.csv"
+        new_filepath = f"{base_name}_DUET_risk_report{hand_text}.csv"
 
         column_1_svg_data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         column_2_svg_data = []
@@ -668,7 +671,7 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
     
 
         # Specify where you want to save the SVG
-        svg_filepath = f"{base_name}_duet_risk_report{hand_text}.svg"
+        svg_filepath = f"{base_name}_DUET_risk_report{hand_text}.svg"
 
         for i in range(11):
             if len(duet_r_counts) > len(duet_l_counts):
@@ -686,8 +689,8 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
 
     if export_HAL_risk_report:   
         #print("")
-        HAL_raw_data_L = sir_data_DUET_L
-        HAL_raw_data_R = sir_data_DUET_R
+        HAL_raw_data_L = sir_data_HAND_EX_L
+        HAL_raw_data_R = sir_data_HAND_EX_R
         
 
         choosen_hand = HAL_raw_data_R
@@ -733,7 +736,12 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
                 grip_HAL = calculate_HAL(duty_cycle, grip_frequency)
 
                 grip_NPF = previous_grip_data[2]
+
+                #OMNI-RES WAS USED, CONVERT
+                if magnitude_scale_options == "OPTION1":
                 
+                    grip_NPF = convert_OMNI_TO_BORG(int(grip_NPF))
+                    #print("NPF WAS CONVERTED OMNI-RES -> BORG")
                 #Add to global variables
                 global_npf += int(grip_NPF)
 
@@ -855,6 +863,13 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
     return {'FINISHED'}
 
 
+def convert_OMNI_TO_BORG(omni):
+
+    omni_borg = [0, 0.5, 2, 2.5, 3, 3.5, 4, 5, 5.5, 7, 10]
+
+    return omni_borg[omni]
+
+
 def due_probability(cd):
     """
     Calculate the Probability of Distal Upper Extremity Outcome based on DUET Cumulative Damage using log base 10.
@@ -920,23 +935,37 @@ class ExportSomeData(Operator, ExportHelper):
 
     export_HAL_risk_report: BoolProperty(
         name="Create HAL/TLV Report",
-        description="Exports a SVG detailing the HAL Risks",
-        default=False,
+        description="Exports a SVG detailing the HAL/TLV Risks",
+        default=True,
     )
+
+    def update_percentage_duet(self, context):
+        if self.use_percentage_duet:
+            self.use_exact_value_duet = False
+
+    def update_exact_value_duet(self, context):
+        if self.use_exact_value_duet:
+            self.use_percentage_duet = False
 
     use_percentage_duet: BoolProperty(
         name="Use percentage as input",
         description="If you choose this method, the number of cycles will be multiplied with the percentage to cover a full workday.",
         default=True,
+        update= update_percentage_duet,
     )
     percentage_of_workday: FloatProperty(
         name="This work represent percentage / day ", description="How much time does the annotation represent of the full workday?", min=0.0, max=100.0, default=20.0)
     
     use_exact_value_duet: BoolProperty(
+        update=update_exact_value_duet,
         name="Use task duration(hours) as input",
         description="If you choose this method, the number of cycles will first be avaraged per minute, then multipled by the number of hours per day. ",
-        default=True,
+        default=False,
+        
     )
+    
+
+
     
     total_hours_of_workday: FloatProperty(
         name="Total work of this kind h / day", description="How many hours in a work day?", min=0.0, max=16.0, default=5.0)
@@ -953,17 +982,34 @@ class ExportSomeData(Operator, ExportHelper):
         options={'HIDDEN'},
     )
 
-    duet_options_items = [
-        ("OPTION1", "DUET Right", "The report will be for right hand"),
-        ("OPTION2", "DUET Left", "The report will be for left hand"),
+    hand_exertions_options_items = [
+        ("OPTION1", "Hand Exertions Right", "The report will be for right hand"),
+        ("OPTION2", "Hand Exertions Left", "The report will be for left hand"),
         
     ]
 
 
-    duet_options: EnumProperty(
+
+    hand_exertion_options: EnumProperty(
         name="HAND",
         description="Choose an option",
-        items=duet_options_items,
+        items=hand_exertions_options_items,
+        default="OPTION1"
+    )
+
+
+    magnitude_scale_options_items = [
+        ("OPTION1", "OMNI-RES", "The magnitude scale was OMNI-RES"),
+        ("OPTION2", "BORG-CR10", "The magnitude scale was BORG-CR10"),
+        
+    ]
+    
+
+
+    magnitude_scale_options: EnumProperty(
+        name="MAGNITUDE SCALE",
+        description="Choose an option",
+        items=magnitude_scale_options_items,
         default="OPTION1"
     )
 
@@ -986,34 +1032,56 @@ class ExportSomeData(Operator, ExportHelper):
           
         ]
         layout = self.layout
+
+        layout.prop(self, "use_percentage_duet")
+        layout.prop(self, "use_exact_value_duet")
+        
+        if self.use_percentage_duet:
+            self.report_method_choosen = 'percentage'
+            self.use_exact_value_duet = False
+            layout.prop(self, 'percentage_of_workday')
+            for line in text_lines_use_percentage_duet:
+                layout.label(text=line)
+
+        elif self.use_exact_value_duet:
+            self.report_method_choosen = 'actual_time'
+            self.use_percentage_duet = False
+
+            layout.prop(self, 'total_hours_of_workday')
+            for line in text_lines_use_actual_duet:
+                layout.label(text=line)
+
+        layout.prop(self, "hand_exertion_options")
+        layout.prop(self, "magnitude_scale_options")
+        
+
         layout.prop(self, "export_duet_risk_report")
 
         layout.prop(self, "export_HAL_risk_report")
-
-        if self.export_duet_risk_report:
-            layout.prop(self, "use_percentage_duet")
-            layout.prop(self, "use_exact_value_duet")
-            layout.prop(self, "duet_options")
+    
+        #if self.export_duet_risk_report:
             
-            if self.use_percentage_duet:
-                self.report_method_choosen = 'percentage'
-                self.use_exact_value_duet = False
-                layout.prop(self, 'percentage_of_workday')
-                for line in text_lines_use_percentage_duet:
-                    layout.label(text=line)
-            elif self.use_exact_value_duet:
-                self.report_method_choosen = 'actual_time'
-                self.use_percentage_duet = False
-                
-                layout.prop(self, 'total_hours_of_workday')
-                for line in text_lines_use_actual_duet:
-                    layout.label(text=line)
-                
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
                 
 
 
     def execute(self, context):
-        return write_some_data(context, self.filepath, self.export_duet_risk_report, self.report_method_choosen, self.percentage_of_workday, self.total_hours_of_workday, self.duet_options, self.export_HAL_risk_report)
+        return write_some_data(context, self.filepath, self.export_duet_risk_report, self.report_method_choosen, self.percentage_of_workday, self.total_hours_of_workday, self.hand_exertion_options, self.export_HAL_risk_report, self.magnitude_scale_options)
 
 
 # Only needed if you want to add into a dynamic menu

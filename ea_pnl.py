@@ -165,15 +165,15 @@ class EA_PT_Panel_Inputs(Panel):
         col = row.column_flow(columns=2)
         #col.operator("myaddon.duet_l_button_operator")
 
-        # duet_left_operator_toggle
+        # hand_ex_left_operator_toggle
         wm = context.window_manager
-        duet_left_label = "DUET LEFT" if wm.duet_left_operator_toggle else "DUET LEFT"
-        col.prop(wm, 'duet_left_operator_toggle',
-                 text=duet_left_label, toggle=True)
-        # duet_right_operator_toggle
-        duet_right_label = "DUET RIGHT" if wm.duet_left_operator_toggle else "DUET RIGHT"
-        col.prop(wm, 'duet_right_operator_toggle',
-                 text=duet_right_label, toggle=True)
+        hand_ex_left_label = "HAND EXERTION L" if wm.hand_ex_left_operator_toggle else "HAND EXERTION L"
+        col.prop(wm, 'hand_ex_left_operator_toggle',
+                 text=hand_ex_left_label, toggle=True)
+        # hand_ex_right_operator_toggle
+        hand_ex_right_label = "HAND EXERTION R" if wm.hand_ex_left_operator_toggle else "HAND EXERTION R"
+        col.prop(wm, 'hand_ex_right_operator_toggle',
+                 text=hand_ex_right_label, toggle=True)
 
         #col.operator("myaddon.duet_r_button_operator")
 
@@ -182,7 +182,7 @@ class EA_PT_Panel_Inputs(Panel):
        
         row = layout.row(align=True)
         col = row.column_flow(columns=2)
-        free_channel_label = "FREE CHANNEL" if wm.duet_left_operator_toggle else "FREE CHANNEL"
+        free_channel_label = "FREE CHANNEL" if wm.hand_ex_left_operator_toggle else "FREE CHANNEL"
         col.prop(wm, 'free_channel_operator_toggle',
                  text=free_channel_label, toggle=True)
         

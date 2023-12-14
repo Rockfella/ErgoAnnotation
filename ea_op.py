@@ -8,7 +8,7 @@ from .ea_global_variables import SavePreferencesOperator
 
 from .ea_constants import frame_from_smpte
 
-from .ea_duet_hotkey import auto_drag_strip
+from .ea_hand_exertion_hotkey import auto_drag_strip
 
 import os
 
@@ -317,18 +317,18 @@ class EA_OT_Round_FPS_Button(Operator):
         return {'FINISHED'}
 
 
-class EA_OT_DUET_L_Button(Operator):
-    bl_idname = "myaddon.duet_left_operator_toggle"
+class EA_OT_HAND_EX_L_Button(Operator):
+    bl_idname = "myaddon.hand_ex_left_operator_toggle"
     bl_label = "My Operator"
 
     def modal(self, context, event):
 
-        if not context.window_manager.duet_left_operator_toggle:
+        if not context.window_manager.hand_ex_left_operator_toggle:
             context.window_manager.event_timer_remove(self._timer)
             print("Stopped")
 
             #Stop the input for this one, but only in case the user press the same button again to turn off and has not pressed another button
-            if bpy.data.scenes[bpy.context.scene.name].active_input == Constants.DUET_LEFT[0]: #if it remains the same as before, it means the button has been turned off from itself
+            if bpy.data.scenes[bpy.context.scene.name].active_input == Constants.HAND_EX_L[0]: #if it remains the same as before, it means the button has been turned off from itself
                 inputSwitchClass.input_switch(self, -2)
 
 
@@ -338,31 +338,31 @@ class EA_OT_DUET_L_Button(Operator):
     def invoke(self, context, event):
 
         #turn off the other buttons
-        context.window_manager.duet_right_operator_toggle = False
+        context.window_manager.hand_ex_right_operator_toggle = False
         context.window_manager.free_channel_operator_toggle = False
 
         self._timer = context.window_manager.event_timer_add(
             time_step = 0.05, window = context.window)
         
         print("Start")
-        inputSwitchClass.input_switch(self, Constants.DUET_LEFT[0])
+        inputSwitchClass.input_switch(self, Constants.HAND_EX_L[0])
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
 
-class EA_OT_DUET_R_Button(Operator):
-    bl_idname = "myaddon.duet_right_operator_toggle"
+class EA_OT_HAND_EX_R_Button(Operator):
+    bl_idname = "myaddon.hand_ex_right_operator_toggle"
     bl_label = "My Operator"
 
     def modal(self, context, event):
 
-        if not context.window_manager.duet_right_operator_toggle:
+        if not context.window_manager.hand_ex_right_operator_toggle:
             context.window_manager.event_timer_remove(self._timer)
             print("Stopped")
 
             # Stop the input for this one, but only in case the user press the same button again to turn off and has not pressed another button
             # if it remains the same as before, it means the button has been turned off from itself
-            if bpy.data.scenes[bpy.context.scene.name].active_input == Constants.DUET_RIGHT[0]:
+            if bpy.data.scenes[bpy.context.scene.name].active_input == Constants.HAND_EX_R[0]:
                 inputSwitchClass.input_switch(self, -2)
             
             return {'FINISHED'}
@@ -370,14 +370,14 @@ class EA_OT_DUET_R_Button(Operator):
 
     def invoke(self, context, event):
         # turn off the other buttons
-        context.window_manager.duet_left_operator_toggle = False
+        context.window_manager.hand_ex_left_operator_toggle = False
         context.window_manager.free_channel_operator_toggle = False
 
         self._timer = context.window_manager.event_timer_add(
             time_step=0.05, window=context.window)
 
         print("Start")
-        inputSwitchClass.input_switch(self, Constants.DUET_RIGHT[0])
+        inputSwitchClass.input_switch(self, Constants.HAND_EX_R[0])
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
@@ -402,8 +402,8 @@ class EA_OT_FREE_CHANNEL_Button(Operator):
 
     def invoke(self, context, event):
         # turn off the other buttons
-        context.window_manager.duet_left_operator_toggle = False
-        context.window_manager.duet_right_operator_toggle = False
+        context.window_manager.hand_ex_left_operator_toggle = False
+        context.window_manager.hand_ex_right_operator_toggle = False
 
         self._timer = context.window_manager.event_timer_add(
             time_step=0.05, window=context.window)

@@ -5,7 +5,7 @@ from bpy.types import Operator
 from .ea_constants import Constants
 
 
-from .ea_duet_hotkey import executeTheReleaseFromKey, executeThePressFromKey
+from .ea_hand_exertion_hotkey import executeTheReleaseFromKey, executeThePressFromKey
 
 
 

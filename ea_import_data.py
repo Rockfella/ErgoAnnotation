@@ -3,7 +3,7 @@ from bpy.props import StringProperty, BoolProperty, EnumProperty, FloatProperty,
 from bpy_extras.io_utils import ImportHelper
 import bpy
 import csv
-from .ea_constants import frame_from_smpte, pickTagColorForDuet
+from .ea_constants import frame_from_smpte, pickTagColorForHandExertions
 import os
 from datetime import datetime, timedelta, time
 import re
@@ -835,7 +835,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                     frame_end=use_end_frame,
                     channel=interval['overlap_number'] + 1,
                 )
-                current_strip.color_tag = pickTagColorForDuet(interval['omni_res'])
+                current_strip.color_tag = pickTagColorForHandExertions(interval['omni_res'])
                 # Adjust the position and scale of the strip
                 current_strip.transform.offset_x = -737  # Adjust the horizontal position
                 # Adjust the vertical position

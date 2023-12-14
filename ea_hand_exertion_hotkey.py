@@ -4,7 +4,7 @@ import time
 import datetime
 from bpy.types import Operator
 from .ea_constants import Constants
-from .ea_constants import pickTagColorForDuet, pickVisualTextColorForDuet, get_slot_value, pickVisualTextColorForFreeMode, pickTagColorForFreeMode
+from .ea_constants import pickTagColorForHandExertions, pickVisualTextColorForHandExertions, get_slot_value, pickVisualTextColorForFreeMode, pickTagColorForFreeMode
 
 # ------------------------------------------------------------------------
 #    HOTKEY: ZERO
@@ -361,22 +361,22 @@ def executeThePressFromKey(self, context, key):
     text_strip_visual_color = (0.35, 0.82, 0.51, 1.0) #default
 
     current_input_channel = -1
-    if curren_input == Constants.DUET_LEFT[0]:
-        current_input_str = Constants.DUET_LEFT[2]
-        current_input_channel = Constants.DUET_LEFT[1]
-        text_strip_visual_text = current_input_str + " OMNI-RES:" + str(key)
+    if curren_input == Constants.HAND_EX_L[0]:
+        current_input_str = Constants.HAND_EX_L[2]
+        current_input_channel = Constants.HAND_EX_L[1]
+        text_strip_visual_text = current_input_str + " MAGNITUDE:" + str(key)
         text_strip_visual_location = (0.05, 0.18)
-        choosen_tag_color = pickTagColorForDuet(key)
-        text_strip_visual_color = pickVisualTextColorForDuet(key)
+        choosen_tag_color = pickTagColorForHandExertions(key)
+        text_strip_visual_color = pickVisualTextColorForHandExertions(key)
         
 
-    elif curren_input == Constants.DUET_RIGHT[0]:
-        current_input_str = Constants.DUET_RIGHT[2] 
-        current_input_channel = Constants.DUET_RIGHT[1]
-        text_strip_visual_text = current_input_str + " OMNI-RES:" + str(key)
+    elif curren_input == Constants.HAND_EX_R[0]:
+        current_input_str = Constants.HAND_EX_R[2] 
+        current_input_channel = Constants.HAND_EX_R[1]
+        text_strip_visual_text = current_input_str + " MAGNITUDE:" + str(key)
         text_strip_visual_location = (0.05, 0.25)
-        choosen_tag_color = pickTagColorForDuet(key)
-        text_strip_visual_color = pickVisualTextColorForDuet(key)
+        choosen_tag_color = pickTagColorForHandExertions(key)
+        text_strip_visual_color = pickVisualTextColorForHandExertions(key)
 
     elif curren_input == Constants.FREE_CHANNEL[0]:
         current_input_str = Constants.FREE_CHANNEL[2]
@@ -391,20 +391,20 @@ def executeThePressFromKey(self, context, key):
 
     time_now = datetime.datetime.now()
     formatted_date_time = time_now.strftime("%Y-%m-%d %H:%M:%S")
-    sequence_name_duet = current_input_str + ", " + key + ", " + str(num_sequence_id) + ", " + formatted_date_time
+    sequence_name_hand_exertion = current_input_str + ", " + key + ", " + str(num_sequence_id) + ", " + formatted_date_time
     sequence_name_free_channel = current_input_str + ", " + str(get_slot_value(context, key)) + \
         ", " + str(num_sequence_id) + ", " + formatted_date_time
 
     current_frame = bpy.context.scene.frame_current
     
 
-    #In case DUET is active we can direclty use the hotkey as str, otherwise use other
+    #In case HAND_EXERTIONS is active we can direclty use the hotkey as str, otherwise use other
     image_str = ""
-    if curren_input == Constants.DUET_LEFT[0]:
-        image_str = sequence_name_duet
+    if curren_input == Constants.HAND_EX_L[0]:
+        image_str = sequence_name_hand_exertion
 
-    elif curren_input == Constants.DUET_RIGHT[0]:
-        image_str = sequence_name_duet
+    elif curren_input == Constants.HAND_EX_R[0]:
+        image_str = sequence_name_hand_exertion
     elif curren_input == Constants.FREE_CHANNEL[0]:
         image_str = sequence_name_free_channel
 

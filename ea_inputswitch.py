@@ -1,8 +1,8 @@
 import bpy 
 
 
-from .ea_duet_hotkey import onPressKeyZERO, onPressKeyONE, onPressKeyTWO, onPressKeyTHREE, onPressKeyFOUR, onPressKeyFIVE, onPressKeySIX, onPressKeySEVEN, onPressKeyEIGHT, onPressKeyNINE, onPressKeyTEN
-from .ea_duet_hotkey import onReleaseKeyZERO, onReleaseKeyONE, onReleaseKeyTWO, onReleaseKeyTHREE, onReleaseKeyFOUR, onReleaseKeyFIVE, onReleaseKeySIX, onReleaseKeySEVEN, onReleaseKeyEIGHT, onReleaseKeyNINE, onReleaseKeyTEN
+from .ea_hand_exertion_hotkey import onPressKeyZERO, onPressKeyONE, onPressKeyTWO, onPressKeyTHREE, onPressKeyFOUR, onPressKeyFIVE, onPressKeySIX, onPressKeySEVEN, onPressKeyEIGHT, onPressKeyNINE, onPressKeyTEN
+from .ea_hand_exertion_hotkey import onReleaseKeyZERO, onReleaseKeyONE, onReleaseKeyTWO, onReleaseKeyTHREE, onReleaseKeyFOUR, onReleaseKeyFIVE, onReleaseKeySIX, onReleaseKeySEVEN, onReleaseKeyEIGHT, onReleaseKeyNINE, onReleaseKeyTEN
 from .ea_free_channel_hotkeys import onPressKeyFreeChannel0, onPressKeyFreeChannel1, onPressKeyFreeChannel2, onPressKeyFreeChannel3, onPressKeyFreeChannel4, onPressKeyFreeChannel5, onPressKeyFreeChannel6, onPressKeyFreeChannel7, onPressKeyFreeChannel8, onPressKeyFreeChannel9
 from .ea_free_channel_hotkeys import onReleaseKeyFreeChannel0, onReleaseKeyFreeChannel1, onReleaseKeyFreeChannel2, onReleaseKeyFreeChannel3, onReleaseKeyFreeChannel4, onReleaseKeyFreeChannel5, onReleaseKeyFreeChannel6, onReleaseKeyFreeChannel7, onReleaseKeyFreeChannel8, onReleaseKeyFreeChannel9
 
@@ -11,15 +11,15 @@ from .ea_constants import Constants
 
 # TODO: register all that are inside this file in the right place
 
-# DUET HOTKEYS and OPERATORS
+# HAND_EXERTIONS HOTKEYS and OPERATORS
 addon_keymaps_active = []
-duet_hotkey_press_executions = (onPressKeyZERO, onPressKeyONE, onPressKeyTWO, onPressKeyTHREE, onPressKeyFOUR,
+hand_exertions_hotkey_press_executions = (onPressKeyZERO, onPressKeyONE, onPressKeyTWO, onPressKeyTHREE, onPressKeyFOUR,
                                 onPressKeyFIVE, onPressKeySIX, onPressKeySEVEN, onPressKeyEIGHT, onPressKeyNINE, onPressKeyTEN)
 
-duet_hotkey_release_executions = (onReleaseKeyZERO, onReleaseKeyONE, onReleaseKeyTWO, onReleaseKeyTHREE, onReleaseKeyFOUR,
+hand_exertions_hotkey_release_executions = (onReleaseKeyZERO, onReleaseKeyONE, onReleaseKeyTWO, onReleaseKeyTHREE, onReleaseKeyFOUR,
                                   onReleaseKeyFIVE, onReleaseKeySIX, onReleaseKeySEVEN, onReleaseKeyEIGHT, onReleaseKeyNINE, onReleaseKeyTEN)
 
-duet_hotkeys = ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR',
+hand_exertions_hotkeys = ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR',
                 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN']
 
 free_channel_press_executions = [onPressKeyFreeChannel0, onPressKeyFreeChannel1, onPressKeyFreeChannel2, onPressKeyFreeChannel3,
@@ -44,10 +44,10 @@ class inputSwitchClass:
 
     def input_switch(self, value=str):
         
-        if value == Constants.DUET_LEFT[0]: #--------------------------------------------------- Constants.DUET_LEFT[0]:
+        if value == Constants.HAND_EX_L[0]: #--------------------------------------------------- Constants.HAND_EX_L[0]:
             
             #set active input
-            bpy.data.scenes[bpy.context.scene.name].active_input = Constants.DUET_LEFT[0]
+            bpy.data.scenes[bpy.context.scene.name].active_input = Constants.HAND_EX_L[0]
 
             #CLEAR OLD KEYMAPS
             # HOTKEY UNREG
@@ -83,25 +83,25 @@ class inputSwitchClass:
                 name='SequencerCommon', space_type='SEQUENCE_EDITOR')
 
             press_executions_index = 0
-            for key in duet_hotkeys:
+            for key in hand_exertions_hotkeys:
             
                 bpy.utils.register_class(
-                    duet_hotkey_press_executions[press_executions_index])
+                    hand_exertions_hotkey_press_executions[press_executions_index])
                 
                 # store the operations for later un-reg
                 addon_keymaps_active_operations.append(
-                    duet_hotkey_press_executions[press_executions_index])
+                    hand_exertions_hotkey_press_executions[press_executions_index])
 
                 # To reach the full scale of OMNI-RES 0-10, ctrl + 1 = 10
                 if key == 'TEN':
                     kmi = km.keymap_items.new(
-                        duet_hotkey_press_executions[press_executions_index].bl_idname, 'ONE', 'PRESS', ctrl=True, shift=False)
+                        hand_exertions_hotkey_press_executions[press_executions_index].bl_idname, 'ONE', 'PRESS', ctrl=True, shift=False)
                     addon_keymaps_active.append((km, kmi))
                     
                 else:
                 
                     kmi = km.keymap_items.new(
-                        duet_hotkey_press_executions[press_executions_index].bl_idname, key, 'PRESS', ctrl=False, shift=False)
+                        hand_exertions_hotkey_press_executions[press_executions_index].bl_idname, key, 'PRESS', ctrl=False, shift=False)
 
                     addon_keymaps_active.append((km, kmi))
                     
@@ -111,25 +111,25 @@ class inputSwitchClass:
             # handle the keymap
 
             release_executions_index = 0
-            for key in duet_hotkeys:
+            for key in hand_exertions_hotkeys:
             
                 bpy.utils.register_class(
-                    duet_hotkey_release_executions[release_executions_index])
+                    hand_exertions_hotkey_release_executions[release_executions_index])
                 
                 # store the operations for later un-reg
                 addon_keymaps_active_operations.append(
-                    duet_hotkey_release_executions[release_executions_index])
+                    hand_exertions_hotkey_release_executions[release_executions_index])
                 
 
                 # To reach the full scale of OMNI-RES 0-10, ctrl + 1 = 10
                 if key == 'TEN':
                     kmi = km.keymap_items.new(
-                        duet_hotkey_release_executions[release_executions_index].bl_idname, 'ONE', 'RELEASE', ctrl=True, shift=False)
+                        hand_exertions_hotkey_release_executions[release_executions_index].bl_idname, 'ONE', 'RELEASE', ctrl=True, shift=False)
                     addon_keymaps_active.append((km, kmi))
                     
                 else:
                     kmi = km.keymap_items.new(
-                        duet_hotkey_release_executions[release_executions_index].bl_idname, key, 'RELEASE', ctrl=False, shift=False)
+                        hand_exertions_hotkey_release_executions[release_executions_index].bl_idname, key, 'RELEASE', ctrl=False, shift=False)
                     addon_keymaps_active.append((km, kmi))
                    
 
@@ -148,10 +148,10 @@ class inputSwitchClass:
             #    #Rename the channel
             #    channel_to_rename.name = 'ANNOTATION'
 
-        elif value == Constants.DUET_RIGHT[0]:  # --------------------------------------------------- Constants.DUET_RIGHT[0]:
+        elif value == Constants.HAND_EX_R[0]:  # --------------------------------------------------- Constants.HAND_EX_R[0]:
             
             # set active input
-            bpy.data.scenes[bpy.context.scene.name].active_input = Constants.DUET_RIGHT[0]
+            bpy.data.scenes[bpy.context.scene.name].active_input = Constants.HAND_EX_R[0]
 
             # HOTKEY UNREG
             unreg_executions_index = 0
@@ -181,25 +181,25 @@ class inputSwitchClass:
                 name='SequencerCommon', space_type='SEQUENCE_EDITOR')
 
             press_executions_index = 0
-            for key in duet_hotkeys:
+            for key in hand_exertions_hotkeys:
 
                 bpy.utils.register_class(
-                    duet_hotkey_press_executions[press_executions_index])
+                    hand_exertions_hotkey_press_executions[press_executions_index])
                 # store the operations for later un-reg
                 addon_keymaps_active_operations.append(
-                    duet_hotkey_press_executions[press_executions_index])
+                    hand_exertions_hotkey_press_executions[press_executions_index])
                 
                 
                 # To reach the full scale of OMNI-RES 0-10, ctrl + 1 = 10
                 if key == 'TEN':
                     kmi = km.keymap_items.new(
-                        duet_hotkey_press_executions[press_executions_index].bl_idname, 'ONE', 'PRESS', ctrl=True, shift=False)
+                        hand_exertions_hotkey_press_executions[press_executions_index].bl_idname, 'ONE', 'PRESS', ctrl=True, shift=False)
                     addon_keymaps_active.append((km, kmi))
                     
                 else:
 
                     kmi = km.keymap_items.new(
-                        duet_hotkey_press_executions[press_executions_index].bl_idname, key, 'PRESS', ctrl=False, shift=False)
+                        hand_exertions_hotkey_press_executions[press_executions_index].bl_idname, key, 'PRESS', ctrl=False, shift=False)
 
                     addon_keymaps_active.append((km, kmi))
                     
@@ -209,25 +209,25 @@ class inputSwitchClass:
             # handle the keymap
 
             release_executions_index = 0
-            for key in duet_hotkeys:
+            for key in hand_exertions_hotkeys:
 
                 bpy.utils.register_class(
-                    duet_hotkey_release_executions[release_executions_index])
+                    hand_exertions_hotkey_release_executions[release_executions_index])
                 
                 # store the operations for later un-reg
                 addon_keymaps_active_operations.append(
-                    duet_hotkey_release_executions[release_executions_index])
+                    hand_exertions_hotkey_release_executions[release_executions_index])
                 
 
                 # To reach the full scale of OMNI-RES 0-10, ctrl + 1 = 10
                 if key == 'TEN':
                     kmi = km.keymap_items.new(
-                        duet_hotkey_release_executions[release_executions_index].bl_idname, 'ONE', 'RELEASE', ctrl=True, shift=False)
+                        hand_exertions_hotkey_release_executions[release_executions_index].bl_idname, 'ONE', 'RELEASE', ctrl=True, shift=False)
                     addon_keymaps_active.append((km, kmi))
                     
                 else:
                     kmi = km.keymap_items.new(
-                        duet_hotkey_release_executions[release_executions_index].bl_idname, key, 'RELEASE', ctrl=False, shift=False)
+                        hand_exertions_hotkey_release_executions[release_executions_index].bl_idname, key, 'RELEASE', ctrl=False, shift=False)
                     addon_keymaps_active.append((km, kmi))
                     
 

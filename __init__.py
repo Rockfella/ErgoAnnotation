@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Johan Sleman",
     "description" : "",
     "blender" : (2, 80, 0),
-    "version" : (1, 0, 9),
+    "version" : (1, 0, 15),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
@@ -37,7 +37,7 @@ from bpy.types import (Panel,
                        PropertyGroup,
                        )
 
-from . ea_op import EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_OT_FREE_CHANNEL_Button, MY_OT_SaveAllPreferences, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton
+from . ea_op import EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_HAND_EX_R_Button, EA_OT_HAND_EX_L_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_OT_FREE_CHANNEL_Button, MY_OT_SaveAllPreferences, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton
 
 
 from . ea_export_data import ExportSomeData
@@ -55,7 +55,7 @@ from .ea_custom_speed_control import draw_header_func
 
 
 #Regular classes
-classes = (CustomPlaybackOperator, EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_DUET_R_Button, EA_OT_DUET_L_Button, EA_OT_FREE_CHANNEL_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_PT_Panel, EA_PT_Panel_Inputs,
+classes = (CustomPlaybackOperator, EA_OT_Master_Clock_Button, EA_OT_Round_FPS_Button, EA_OT_HAND_EX_R_Button, EA_OT_HAND_EX_L_Button, EA_OT_FREE_CHANNEL_Button, EA_OT_Export_Data_Button, EA_OT_Import_Data_Button, EA_PT_Panel, EA_PT_Panel_Inputs,
            ExportSomeData, ImportSomeData, SEQUENCER_MT_custom_menu, SEQUENCER_OT_SetRangeToStrips, FREE_CHANNEL_VARS_PG, FREE_CHANNEL_Preferences, EA_PT_Panel_Free_Channel, MY_OT_SaveAllPreferences, SavePreferencesOperator, MY_OT_AddFreeChannelInput, MY_OT_CleanFreeChannelInput, SEQUENCE_OT_custom_add_movie_strip, EA_OT_Master_Clock_Button_Adapt, EA_OT_Master_Clock_Button_Move,  EA_OT_AdaptionInfoButton, EA_PT_Panel_Import, EA_PT_Panel_Export)
 def register():
     setup_custom_keymaps()
@@ -67,16 +67,16 @@ def register():
     bpy.types.Scene.active_input = bpy.props.IntProperty(
         name="active_input")
     
-
+    
     #Button toggles for each input
-    bpy.types.WindowManager.duet_left_operator_toggle = bpy.props.BoolProperty(
+    bpy.types.WindowManager.hand_ex_left_operator_toggle = bpy.props.BoolProperty(
         default=False,
-        update=update_function_duet_left_operator_toggle)
+        update=update_function_hand_ex_left_operator_toggle)
     
     # Button toggles for each input
-    bpy.types.WindowManager.duet_right_operator_toggle = bpy.props.BoolProperty(
+    bpy.types.WindowManager.hand_ex_right_operator_toggle = bpy.props.BoolProperty(
         default=False,
-        update=update_function_duet_right_operator_toggle)
+        update=update_function_hand_ex_right_operator_toggle)
     
     
     # Button toggles for each input
@@ -128,8 +128,8 @@ def unregister():
     del bpy.types.Scene.master_time_adaption
     del bpy.types.Scene.master_time_frame
     del bpy.types.Scene.active_input
-    del bpy.types.WindowManager.duet_left_operator_toggle
-    del bpy.types.WindowManager.duet_right_operator_toggle
+    del bpy.types.WindowManager.hand_ex_left_operator_toggle
+    del bpy.types.WindowManager.hand_ex_right_operator_toggle
     del bpy.types.WindowManager.free_channel_operator_toggle
     del bpy.types.WindowManager.speed_control_operator_toggle
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
@@ -148,19 +148,19 @@ def unregister():
     
 
 
-def update_function_duet_left_operator_toggle(self, context):
-    if self.duet_left_operator_toggle:
+def update_function_hand_ex_left_operator_toggle(self, context):
+    if self.hand_ex_left_operator_toggle:
         first = bpy.ops.myaddon
 
-        first.duet_left_operator_toggle('INVOKE_DEFAULT')
+        first.hand_ex_left_operator_toggle('INVOKE_DEFAULT')
     return
 
 
-def update_function_duet_right_operator_toggle(self, context):
-    if self.duet_right_operator_toggle:
+def update_function_hand_ex_right_operator_toggle(self, context):
+    if self.hand_ex_right_operator_toggle:
         first = bpy.ops.myaddon
 
-        first.duet_right_operator_toggle('INVOKE_DEFAULT')
+        first.hand_ex_right_operator_toggle('INVOKE_DEFAULT')
     return
 
 
