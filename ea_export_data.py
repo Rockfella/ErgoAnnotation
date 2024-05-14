@@ -212,12 +212,6 @@ def create_HAL_graph_svg_with_points(points, filepath, title, additional_text):
         f.write(svg_content)
 
 
-
-
-
-
-
-
 def create_a4_svg_with_text_and_table(filepath, text_content, column_1_data, column_2_data, column_3_data, column_4_data, column_5_data, str_list_to_report):
     # Define the SVG structure for an A4 paper
     a4_width = 2100  # in mm
@@ -378,8 +372,8 @@ def create_a4_svg_with_text_and_table(filepath, text_content, column_1_data, col
         f.write(svg_content)
 
 
-def write_some_data(context, filepath, export_duet_risk_report, report_method_choosen, percentage_of_workday, total_hours_of_workday, duet_options, export_HAL_risk_report, magnitude_scale_options):
-    print("running write_some_data...")
+def save_all_files(context, filepath, export_strip_as_row, is_ergonomic_risk_report, export_duet_risk_report, report_method_choosen, percentage_of_workday, total_hours_of_workday, duet_options, export_HAL_risk_report, magnitude_scale_options):
+    
 
     scene = bpy.context.scene
 
@@ -410,9 +404,11 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
     sir_data_HAND_EX_R = []
     sir_data_FREE_CHANNEL = []
 
+   
     # Sorting sequence_strips based on channel values in descending order
     sorted_strips = sorted(sequence_strips, key=lambda s: s.channel, reverse=True)
-
+    sorted_strips_time = sorted(sequence_strips, key=lambda s: (s.frame_start, -s.channel))
+    
     for strip in sorted_strips:
         filter_name = strip.name.split(',')
         if strip.type == 'TEXT' and strip.name.count(',') > 2:
@@ -479,7 +475,58 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
         "HAND_EX_R": data_data_HAND_EX_R,
         "FREE_CHANNEL": data_FREE_CHANNEL
     }
+    
+    if export_strip_as_row:
+        #Exporting each strip as a csv, each str as row with information
+        strip_data = {
+        }
+        id_strip = 0
+        effective_fps = scene.render.fps / scene.render.fps_base
+        
+        #Run through al strip sorten on time, if the same frame choose the one that is higher up by channel
+        for strip in sorted_strips_time:
 
+            strip_name = strip.name.split(',')
+            if strip.type == 'TEXT' and strip.name.count(',') > 2:
+
+                start_frame = int(strip.frame_start)
+                end_frame = start_frame + int(strip.frame_final_duration)
+
+                
+                combined_strip_name = strip_name[0] + " " + strip_name[1]
+
+                # Input SMPTE formatted string
+                smpte_string_start = bpy.utils.smpte_from_frame(
+                            (start_frame + frames_from_master_clock - calc_master_frame), fps=fps, fps_base=fps_base)
+                start_hours, start_minutes, start_seconds, start_frames = map(int, smpte_string_start.split(':'))
+                start_milliseconds = int(round(start_frames/effective_fps, 3) * 1000)
+
+                new_start_string = f"{start_hours}:{start_minutes}:{start_seconds}.{start_milliseconds}"
+
+                smpte_string_end = bpy.utils.smpte_from_frame(
+                            (end_frame + frames_from_master_clock - calc_master_frame), fps=fps, fps_base=fps_base)
+                end_hours, end_minutes, end_seconds, end_frames = map(int, smpte_string_end.split(':'))
+                end_milliseconds = int(round(end_frames/effective_fps, 3) * 1000)
+
+                new_end_string = f"{end_hours}:{end_minutes}:{end_seconds}.{end_milliseconds}"
+
+                # Storing in dictionary
+                strip_data[str(id_strip)] = (combined_strip_name, new_start_string, new_end_string)
+                id_strip += 1
+        
+        # Strip Filename and save as csv
+        base_name_strip, ext = os.path.splitext(filepath)
+        new_filepath_strip = f"{base_name_strip}_strip_details.csv"
+        with open(new_filepath_strip, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['ID', 'Input', 'Start Time', 'End Time'])
+
+            for key, value in strip_data.items():
+                
+                row = [key] + list(value)
+                writer.writerow(row)
+        
+    
     # Save to csv file
     with open(filepath, 'w', encoding='utf-8', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=data.keys())
@@ -488,7 +535,7 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
             row = {key: values[i] for key, values in data.items()}
             writer.writerow(row)
     
-    if export_duet_risk_report:
+    if export_duet_risk_report and is_ergonomic_risk_report:
         # Get the active scene
         scene = bpy.context.scene
 
@@ -583,8 +630,6 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
         column_3_svg_data = []
         column_4_svg_data = []
         column_5_svg_data = []
-
-
 
 
 
@@ -687,7 +732,7 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
                                           column_2_svg_data, column_3_svg_data, column_3_svg_data, column_3_svg_data, str_list_to_report)
 
 
-    if export_HAL_risk_report:   
+    if export_HAL_risk_report and is_ergonomic_risk_report:   
         #print("")
         HAL_raw_data_L = sir_data_HAND_EX_L
         HAL_raw_data_R = sir_data_HAND_EX_R
@@ -751,8 +796,7 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
             previous_grip_data = grip
 
 
-        #print("list_hal_collected")
-        #print(list_hal_collected)
+       
 
 
         display_points_for_HAL_graph = []
@@ -770,9 +814,9 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
 
 
         # Calculate percentiles
-        percentiles = [50, 70, 90]
-        percentiles_first_element = np.percentile(first_elements, percentiles)
-        percentiles_second_element = np.percentile(second_elements, percentiles)
+       #percentiles = [50, 70, 90]
+        #percentiles_first_element = np.percentile(first_elements, percentiles)
+        #percentiles_second_element = np.percentile(second_elements, percentiles)
 
         #append avrage
         display_points_for_HAL_graph.append((avg_HAL_element, avg_NPF_element, 'Indiv. Grip Average'))
@@ -796,7 +840,7 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
         #Added for Peters for comparison
         #------------------------------------------------------------------------------------------------------------
         #The regular qay of calculating frequency
-        peters_list_hal_collected = []
+        #peters_list_hal_collected = []
 
         number_of_cycles = len(choosen_hand)
         # Calculate the total number of frames
@@ -812,7 +856,10 @@ def write_some_data(context, filepath, export_duet_risk_report, report_method_ch
 
         global_grip_frequency = number_of_cycles / duration_seconds
 
-        global_duty_cycle = (global_on_time / (global_on_time + global_off_time)) * 100
+        if global_on_time + global_off_time > 0:
+            global_duty_cycle = (global_on_time / (global_on_time + global_off_time)) * 100
+        else:
+            global_duty_cycle = 0
 
 
         global_grip_HAL = calculate_HAL(global_duty_cycle, global_grip_frequency)
@@ -924,9 +971,18 @@ class ExportSomeData(Operator, ExportHelper):
         options={'HIDDEN'},
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
+    
+    is_ergonomic_risk_report: BoolProperty(
+        name="Ergonomic Report",
+        description="Do you want to create risk reports?",
+        default=False,
+    )
+    export_strip_as_row: BoolProperty(
+        name="Export Strip Detail",
+        description="Do you want to produce .csv with each strip as well?",
+        default=False,
+    )
 
-    # List of operator properties, the attributes will be assigned
-    # to the class instance from the operator settings before calling.
     export_duet_risk_report: BoolProperty(
         name="Create DUET Report",
         description="Exports a SVG detailing the DUET Risks",
@@ -1033,31 +1089,37 @@ class ExportSomeData(Operator, ExportHelper):
         ]
         layout = self.layout
 
-        layout.prop(self, "use_percentage_duet")
-        layout.prop(self, "use_exact_value_duet")
+  
+        layout.prop(self, "is_ergonomic_risk_report")
+        layout.prop(self, "export_strip_as_row")
         
-        if self.use_percentage_duet:
-            self.report_method_choosen = 'percentage'
-            self.use_exact_value_duet = False
-            layout.prop(self, 'percentage_of_workday')
-            for line in text_lines_use_percentage_duet:
-                layout.label(text=line)
+        if self.is_ergonomic_risk_report:
+ 
+            layout.prop(self, "use_percentage_duet")
+            layout.prop(self, "use_exact_value_duet")
+            if self.use_percentage_duet:
 
-        elif self.use_exact_value_duet:
-            self.report_method_choosen = 'actual_time'
-            self.use_percentage_duet = False
+                self.report_method_choosen = 'percentage'
+                self.use_exact_value_duet = False
+                layout.prop(self, 'percentage_of_workday')
+                for line in text_lines_use_percentage_duet:
+                    layout.label(text=line)
 
-            layout.prop(self, 'total_hours_of_workday')
-            for line in text_lines_use_actual_duet:
-                layout.label(text=line)
+            elif self.use_exact_value_duet:
+                self.report_method_choosen = 'actual_time'
+                self.use_percentage_duet = False
 
-        layout.prop(self, "hand_exertion_options")
-        layout.prop(self, "magnitude_scale_options")
-        
+                layout.prop(self, 'total_hours_of_workday')
+                for line in text_lines_use_actual_duet:
+                    layout.label(text=line)
 
-        layout.prop(self, "export_duet_risk_report")
+            layout.prop(self, "hand_exertion_options")
+            layout.prop(self, "magnitude_scale_options")
 
-        layout.prop(self, "export_HAL_risk_report")
+
+            layout.prop(self, "export_duet_risk_report")
+
+            layout.prop(self, "export_HAL_risk_report")
     
         #if self.export_duet_risk_report:
             
@@ -1081,7 +1143,7 @@ class ExportSomeData(Operator, ExportHelper):
 
 
     def execute(self, context):
-        return write_some_data(context, self.filepath, self.export_duet_risk_report, self.report_method_choosen, self.percentage_of_workday, self.total_hours_of_workday, self.hand_exertion_options, self.export_HAL_risk_report, self.magnitude_scale_options)
+        return save_all_files(context, self.filepath, self.export_strip_as_row, self.is_ergonomic_risk_report, self.export_duet_risk_report, self.report_method_choosen, self.percentage_of_workday, self.total_hours_of_workday, self.hand_exertion_options, self.export_HAL_risk_report, self.magnitude_scale_options)
 
 
 # Only needed if you want to add into a dynamic menu
