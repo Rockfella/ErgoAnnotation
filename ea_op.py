@@ -1,17 +1,192 @@
 import bpy
 import datetime
 from bpy.types import Operator
-from bpy.app.handlers import persistent
+#from bpy.app.handlers import persistent
 from .ea_inputswitch import inputSwitchClass
 from .ea_constants import Constants
-from .ea_global_variables import SavePreferencesOperator
+#from .ea_global_variables import SavePreferencesOperator
 
-from .ea_constants import frame_from_smpte
+from .ea_constants import frame_from_smpte, get_pmc_value, get_pmc_description, get_pmc_options, get_pmc_id
 
 from .ea_hand_exertion_hotkey import auto_drag_strip
-
+import time
 import os
 
+
+# Cache storage for guide_buttons
+guide_button_cache = {}
+
+
+class EA_OT_EmptyGuideButtonOperator(bpy.types.Operator):
+    bl_idname = "wm.empty_guide_button_operator"
+    bl_label = "Custom Button Operator"
+    bl_description = "No description for hotkey."
+    button_index: bpy.props.IntProperty()
+    button_description: bpy.props.StringProperty()
+
+
+    def execute(self, context):
+        #context.scene.active_input = self.button_index
+        
+        return {'FINISHED'}
+    
+    @classmethod
+    def description(cls, context, properties):
+        return properties.button_description
+
+
+
+def draw_guide_header(self, context):
+    layout = self.layout
+    scene = context.scene
+    active_input = scene.active_input
+    active_hotkey = scene.active_hotkey
+    wm = bpy.context.window_manager
+    
+    #Display hotkey guide buttons, only if PMC is selected
+    if context.window_manager.pomoc_channel_operator_toggle:
+    
+        row = layout.row(align=True)
+        def update_guide_buttons(i):
+               
+            name, information = get_guide_button_information(i)
+            
+            if i == active_hotkey:
+                op = row.operator("wm.empty_guide_button_operator", text=str(name))
+                op.button_index = i
+                op.button_description = information
+            else:
+                op = row.operator("wm.empty_guide_button_operator", text=str(name), emboss=False)
+                op.button_index = i
+                op.button_description = information
+                
+        #In order to follow keyboard keys 1-9 + 0 we need 0 to be last
+        for i in range(1, 10):
+            update_guide_buttons(i)
+
+        update_guide_buttons(0)
+
+        
+   
+class CUSTOM_OT_gradual_frame_jump(bpy.types.Operator):
+    bl_idname = "custom.gradual_frame_jump"
+    bl_label = "Gradual Frame Jump"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    _timer = None
+    _key_hold_start = None
+    _key_held = False
+    _direction = None
+    _initial_jump_done = False
+    _zoom_level = None
+
+    def modal(self, context, event):
+        if event.type in {'ESC', 'RIGHTMOUSE'}:
+            return self.cancel(context)
+
+        if event.type == 'TIMER':
+            if self._key_held and self._key_hold_start:
+                hold_duration = time.time() - self._key_hold_start
+                increase = 100
+                if self._zoom_level is not None:
+                    increase = interpolate_zoom_level(self._zoom_level)
+
+                if hold_duration < 3.0:
+                    delta = 10 + (hold_duration / 3.0) * (increase - 10)
+                elif hold_duration < 5.0:
+                    delta = 100 + ((hold_duration - 3.0) / 2.0) * ((increase * 3) - 100)
+                else:
+                    delta = 300
+
+                frame_change = 1 if self._direction == 'UP' else -1
+                frame_steps = int(delta) * frame_change
+
+                context.scene.frame_current += frame_steps
+
+            return {'RUNNING_MODAL'}
+
+        if event.type in {'UP_ARROW', 'DOWN_ARROW'}:
+            if event.value == 'PRESS':
+                self._direction = 'UP' if event.type == 'UP_ARROW' else 'DOWN'
+                #frame_change = 10 if self._direction == 'UP' else -10
+                #context.scene.frame_current += frame_change
+                #self._initial_jump_done = True
+                if not self._key_held:
+                    self._key_hold_start = time.time()
+                    self._key_held = True
+                return {'RUNNING_MODAL'}
+            elif event.value == 'RELEASE':
+                self._key_hold_start = None
+                self._key_held = False
+                self._initial_jump_done = False
+                return self.cancel(context)
+
+        return {'PASS_THROUGH'}
+
+    def invoke(self, context, event):
+        if event.type in {'UP_ARROW', 'DOWN_ARROW'}:
+            if event.value == 'PRESS':
+                self._direction = 'UP' if event.type == 'UP_ARROW' else 'DOWN'
+                frame_change = 10 if self._direction == 'UP' else -10
+                context.scene.frame_current += frame_change
+                self._initial_jump_done = True
+                
+        for area in context.window.screen.areas:
+            if area.type == 'SEQUENCE_EDITOR':
+                self._zoom_level = get_sequencer_current_zoom()
+                self._timer = context.window_manager.event_timer_add(0.1, window=context.window)
+                context.window_manager.modal_handler_add(self)
+                return {'RUNNING_MODAL'}
+        self.report({'WARNING'}, "Sequencer area not found, can't start operator")
+        return {'CANCELLED'}
+
+    def cancel(self, context):
+        if self._timer is not None:
+            context.window_manager.event_timer_remove(self._timer)
+        return {'CANCELLED'}
+
+def get_sequencer_current_zoom():
+    for area in bpy.context.window.screen.areas:
+        if area.type == 'SEQUENCE_EDITOR':
+            for space in area.spaces:
+                if space.type == 'SEQUENCE_EDITOR':
+                    for region in area.regions:
+                        if region.type == 'WINDOW':
+                            view2d = region.view2d
+                            if view2d:
+                                
+                                region_width = region.width
+                                region_height = region.height
+
+                                
+                                print(f"Region width: {region_width}, height: {region_height}")
+
+                                # Check if we have valid dimensions
+                                if region_width > 1 and region_height > 1:
+                                    
+                                    xmin, ymin = view2d.region_to_view(0, 0)
+                                    xmax, ymax = view2d.region_to_view(region_width, region_height)
+                                    
+                                    visible_range_x = xmax - xmin
+                                    visible_range_y = ymax - ymin
+                                    
+                                    zoom_x = region_width / visible_range_x
+                                    zoom_y = region_height / visible_range_y
+
+                                    # Print zoom levels for debugging
+                                    #print(f"Visible Range: X=({xmin}, {xmax}), Y=({ymin}, {ymax})")
+                                    #print(f"Calculated Zoom X: {zoom_x}, Zoom Y: {zoom_y}")
+
+                                    return zoom_x
+                                else:
+                                    print("Invalid region dimensions detected.")
+    return None
+
+def interpolate_zoom_level(x):
+    x1, x2 = 317.01, 0.03
+    y1, y2 = 1, 100
+    y = y1 + ((y2 - y1) / (x2 - x1)) * (x - x1)
+    return y
 class MY_OT_SaveAllPreferences(bpy.types.Operator):
     bl_idname = "my.preferencesavecall"
     bl_label = "Call Function"
@@ -340,6 +515,8 @@ class EA_OT_HAND_EX_L_Button(Operator):
         #turn off the other buttons
         context.window_manager.hand_ex_right_operator_toggle = False
         context.window_manager.free_channel_operator_toggle = False
+        context.window_manager.pomoc_channel_operator_toggle = False
+        
 
         self._timer = context.window_manager.event_timer_add(
             time_step = 0.05, window = context.window)
@@ -372,6 +549,7 @@ class EA_OT_HAND_EX_R_Button(Operator):
         # turn off the other buttons
         context.window_manager.hand_ex_left_operator_toggle = False
         context.window_manager.free_channel_operator_toggle = False
+        context.window_manager.pomoc_channel_operator_toggle = False
 
         self._timer = context.window_manager.event_timer_add(
             time_step=0.05, window=context.window)
@@ -381,6 +559,42 @@ class EA_OT_HAND_EX_R_Button(Operator):
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
+
+
+class EA_OT_POMOC_CHANNEL_Button(Operator):
+    bl_idname = "myaddon.pomoc_channel_operator_toggle"
+    bl_label = "My Operator"
+    bl_description = "Yes"
+ 
+    def modal(self, context, event):
+
+        if not context.window_manager.pomoc_channel_operator_toggle:
+            context.window_manager.event_timer_remove(self._timer)
+            
+            print("Stopped")
+
+            # Stop the input for this one, but only in case the user press the same button again to turn off and has not pressed another button
+            # if it remains the same as before, it means the button has been turned off from itself
+            if bpy.data.scenes[bpy.context.scene.name].active_input == Constants.POST_MOVE_CODE[0]:
+                inputSwitchClass.input_switch(self, -2)
+
+            return {'FINISHED'}
+        return {'PASS_THROUGH'}
+
+    def invoke(self, context, event):
+        # turn off the other buttons
+        context.window_manager.hand_ex_left_operator_toggle = False
+        context.window_manager.hand_ex_right_operator_toggle = False
+        context.window_manager.free_channel_operator_toggle = False
+        
+
+        self._timer = context.window_manager.event_timer_add(
+            time_step=0.05, window=context.window)
+        
+        print("Start")
+        inputSwitchClass.input_switch(self, Constants.POST_MOVE_CODE[0])
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
 
 class EA_OT_FREE_CHANNEL_Button(Operator):
     bl_idname = "myaddon.free_channel_operator_toggle"
@@ -404,6 +618,7 @@ class EA_OT_FREE_CHANNEL_Button(Operator):
         # turn off the other buttons
         context.window_manager.hand_ex_left_operator_toggle = False
         context.window_manager.hand_ex_right_operator_toggle = False
+        context.window_manager.pomoc_channel_operator_toggle = False
 
         self._timer = context.window_manager.event_timer_add(
             time_step=0.05, window=context.window)
@@ -422,7 +637,6 @@ class EA_OT_Export_Data_Button(Operator):
     def execute(self, context):
         # button_function(self, context)
         
-        print("EXPORT")
         bpy.ops.export_test.some_data('INVOKE_DEFAULT')
 
         return {'FINISHED'}
@@ -436,8 +650,20 @@ class EA_OT_Import_Data_Button(Operator):
     def execute(self, context):
         # button_function(self, context)
 
-        print("EXPORT")
         bpy.ops.import_test.some_data('INVOKE_DEFAULT')
+
+        return {'FINISHED'}
+    
+
+class EA_OT_NewImporter_Button(Operator):
+    bl_idname = "myaddon.new_importer_button"
+    bl_label = "Import Data from CSV"
+    bl_description = "Import Data from CSV, make sure to spec type Date Time"
+
+    def execute(self, context):
+        # button_function(self, context)
+
+        bpy.ops.import_improvement.new_importer('INVOKE_DEFAULT')
 
         return {'FINISHED'}
 
@@ -511,6 +737,17 @@ class SEQUENCE_OT_custom_add_movie_strip(bpy.types.Operator):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
+class SEQUENCER_OT_deselect_all_strips(bpy.types.Operator):
+    bl_idname = "sequencer.deselect_all_strips"
+    bl_label = "Deselect All Strips"
+    bl_description = "Deselect all strips in the Sequencer"
+
+    def execute(self, context):
+        seq = context.scene.sequence_editor
+        if seq:
+            for strip in seq.sequences_all:
+                strip.select = False
+        return {'FINISHED'}
 
 
 def check_string_format(string):
@@ -607,12 +844,7 @@ def setWaterMasterTime(self, context):
     text_strip.align_x = 'LEFT'  # Set the horizontal alignment
     text_strip.align_y = 'CENTER'  # Set the vertical alignment
 
-    
-    
-   
 
-
-    
 
 
 
@@ -843,3 +1075,19 @@ def split_and_shift(num_cuts):
             seq_editor.active_strip = s
             print_index += 1
         bpy.ops.sequencer.meta_make()
+
+
+def get_guide_button_information(i):
+    # Check if the infortmation is already cached
+    if i in guide_button_cache:
+        #print("Using cache")
+        return guide_button_cache[i]
+    
+    # Compute the information and cache it
+    cat_options = get_pmc_options(get_pmc_id(i))
+    cat_keys = [key for item in cat_options if isinstance(item, dict) for key in item.keys()]
+    button_texts = f"[ {i} ] \n {get_pmc_value(i)}"
+    information = f"{get_pmc_description(i)} \n Options:\n {cat_keys}"
+    guide_button_cache[i] = (button_texts, information)
+    
+    return button_texts, information

@@ -2,8 +2,29 @@ import bpy
 
 
 from bpy.types import Panel
-from .ea_constants import Constants
-from .ea_ot_right_click_handler import CreatedOperatorsFreeChannel
+#from .ea_constants import Constants
+#from .ea_ot_right_click_handler import CreatedOperatorsFreeChannel
+
+class EA_PT_HotKeyGuide(bpy.types.Panel):
+    bl_space_type = 'SEQUENCE_EDITOR'
+    bl_region_type = 'HEADER'
+    bl_label = "Visual buttons"
+
+    def draw(self, context):
+        return
+       #layout = self.layout
+       #scene = context.scene
+
+       ## Create 10 buttons with text based on the active_input
+       #button_texts = [f"But {i+1}" for i in range(10)]
+       #active_input = scene.active_input
+
+       #row = layout.row(align=True)
+       #for i in range(10):
+       #    if i == active_input:
+       #        row.operator("wm.empty_guide_button_operator", text=button_texts[i]).button_index = i
+       #    else:
+       #        row.operator("wm.empty_guide_button_operator", text=button_texts[i], emboss=False).button_index = i
 
 
 class EA_PT_Panel(Panel):
@@ -185,6 +206,9 @@ class EA_PT_Panel_Inputs(Panel):
         free_channel_label = "FREE CHANNEL" if wm.hand_ex_left_operator_toggle else "FREE CHANNEL"
         col.prop(wm, 'free_channel_operator_toggle',
                  text=free_channel_label, toggle=True)
+        pcm_label = "PoMoC"
+        col.prop(wm, 'pomoc_channel_operator_toggle',
+                 text=pcm_label, toggle=True)
         
         
 class EA_PT_Panel_Export(Panel):
@@ -213,6 +237,19 @@ class EA_PT_Panel_Import(Panel):
 
         # Add a button with a callback to the button_function
         layout.operator("myaddon.import_data_operator")
+        
+class EA_PT_Panel_NewImporter(Panel):
+    bl_label = "Import File (New)"
+    bl_idname = "SEQUENCER_PT_my_addon_panel_new_importer"
+    bl_space_type = 'SEQUENCE_EDITOR'
+    bl_region_type = 'UI'
+    bl_category = 'ErgoAnnotation'
+
+    def draw(self, context):
+        layout = self.layout
+
+        # Add a button with a callback to the button_function
+        layout.operator("myaddon.new_importer_button")
         
 
 class EA_PT_Panel_Video_Import(Panel):

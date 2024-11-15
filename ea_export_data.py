@@ -45,6 +45,44 @@ def rgb_to_hex(rgb):
 
 
 
+def collect_animation_data_from_import():
+    # Collect all empty objects with animation data
+    empty_objects = [obj for obj in bpy.data.objects if obj.type == 'EMPTY' and obj.animation_data and obj.animation_data.action]
+    
+    # Dictionary to store frames and corresponding values for each object
+    frame_data = {}
+    all_frames = set()
+    
+    # Collect all frames from keyframes of all empty objects
+    for obj in empty_objects:
+        action = obj.animation_data.action
+        for fcurve in action.fcurves:
+            for keyframe_point in fcurve.keyframe_points:
+                frame = round(keyframe_point.co[0])
+                all_frames.add(frame)
+    
+    # Sort frames in ascending order
+    sorted_frames = sorted(all_frames)
+    
+    # Evaluate and store values at each frame for each empty object
+    for frame in sorted_frames:
+        frame_data[frame] = {}
+        for obj in empty_objects:
+            action = obj.animation_data.action
+            # Assuming we're interested in the first fcurve of each object
+            # Modify this if you have multiple fcurves per object
+            if action.fcurves:
+                fcurve = action.fcurves[0]
+                value = fcurve.evaluate(frame)
+                frame_data[frame][obj.name] = value
+            else:
+                frame_data[frame][obj.name] = ''  # No value if no fcurve
+      
+    return frame_data          
+
+
+
+
 def create_HAL_graph_svg_with_points(points, filepath, title, additional_text):
     # Dimensions for the SVG
     svg_width, svg_height = 960, 600
@@ -403,7 +441,8 @@ def save_all_files(context, filepath, export_strip_as_row, is_ergonomic_risk_rep
     sir_data_HAND_EX_L = []
     sir_data_HAND_EX_R = []
     sir_data_FREE_CHANNEL = []
-
+    sir_data_PMC = []
+    
    
     # Sorting sequence_strips based on channel values in descending order
     sorted_strips = sorted(sequence_strips, key=lambda s: s.channel, reverse=True)
@@ -415,11 +454,19 @@ def save_all_files(context, filepath, export_strip_as_row, is_ergonomic_risk_rep
             
             start_frame = int(strip.frame_start)
             end_frame = start_frame + int(strip.frame_final_duration)
-            
+        
+            strip_comment = ""    
+            if "Comment" in strip:
+                current_comment = strip["Comment"]
+                strip_comment = current_comment
 
             filer_name_one_removed_spaces = filter_name[1].replace(
                 " ", "")
 
+            id_value = filter_name[2].replace(
+                " ", "")
+            combined_info = f"{filer_name_one_removed_spaces}, {id_value}, Comment: {strip_comment}"
+            
             # Sort the strip.names into the right cathegories
             if filter_name[0] == Constants.HAND_EX_L[2]:
                 sir_data_HAND_EX_L.append(
@@ -432,6 +479,9 @@ def save_all_files(context, filepath, export_strip_as_row, is_ergonomic_risk_rep
             elif filter_name[0] == Constants.FREE_CHANNEL[2]:
                 sir_data_FREE_CHANNEL.append(
                     (start_frame, end_frame, filer_name_one_removed_spaces))
+            elif filter_name[0] == Constants.POST_MOVE_CODE[2]:
+                sir_data_PMC.append(
+                    (start_frame, end_frame, combined_info))
                 
 
 
@@ -439,12 +489,17 @@ def save_all_files(context, filepath, export_strip_as_row, is_ergonomic_risk_rep
     sir_data_HAND_EX_L.sort()
     sir_data_HAND_EX_R.sort()
     sir_data_FREE_CHANNEL.sort()
+    sir_data_PMC.sort()
 
     # Building a dictionary of active strips for each frame
     active_strips_data_HAND_EX_L = {}
     active_strips_data_HAND_EX_R = {}
     active_strips_data_FREE_CHANNEL = {}
-
+    active_strips_data_PMC = {}
+    #Takeing imported data to account
+    imported_data_from_empty = collect_animation_data_from_import()
+    #Cutting it out to fit the range
+    imported_data_from_empty_cut = {k: imported_data_from_empty.get(k, ' ') for k in range(scene.frame_start, scene.frame_end + 1)}
 
 
     for frame in range(scene.frame_start, scene.frame_end + 1):
@@ -454,10 +509,16 @@ def save_all_files(context, filepath, export_strip_as_row, is_ergonomic_risk_rep
                                             name in sir_data_HAND_EX_R if start <= frame < end]
         active_strips_data_FREE_CHANNEL[frame] = [name for start, end,
                                                   name in sir_data_FREE_CHANNEL if start <= frame < end]
-
+        active_strips_data_PMC[frame] = [name for start, end,
+                                                  name in sir_data_PMC
+                                                  if start <= frame < end]
+        
+    
     data_data_HAND_EX_L = []
     data_data_HAND_EX_R = []
     data_FREE_CHANNEL = []
+    data_FREE_PMC = []
+    data_FROM_IMPORT = []
 
     for frame, strips in active_strips_data_HAND_EX_L.items():
         data_data_HAND_EX_L.append(strips)
@@ -467,13 +528,21 @@ def save_all_files(context, filepath, export_strip_as_row, is_ergonomic_risk_rep
 
     for frame, strips in active_strips_data_FREE_CHANNEL.items():
         data_FREE_CHANNEL.append(strips)
+        
+    for frame, strips in active_strips_data_PMC.items():
+        data_FREE_PMC.append(strips)
+    
+    for frame, data in imported_data_from_empty_cut.items():
+        data_FROM_IMPORT.append(data)
 
     # Combine all lists into a dict that speeds up the csv export
     data = {
         "master_clock": data_master_clock,
         "HAND_EX_L": data_data_HAND_EX_L,
         "HAND_EX_R": data_data_HAND_EX_R,
-        "FREE_CHANNEL": data_FREE_CHANNEL
+        "FREE_CHANNEL": data_FREE_CHANNEL,
+        "PoMoC": data_FREE_PMC,
+        "IMPORTED_DATA": data_FROM_IMPORT
     }
     
     if export_strip_as_row:
@@ -532,7 +601,12 @@ def save_all_files(context, filepath, export_strip_as_row, is_ergonomic_risk_rep
         writer = csv.DictWriter(f, fieldnames=data.keys())
         writer.writeheader()
         for i in range(len(data_master_clock)):
-            row = {key: values[i] for key, values in data.items()}
+            row = {}
+            for key, values in data.items():
+                if i < len(values):
+                    row[key] = values[i]
+                else:
+                    row[key] = ''  # Use a default value like an empty string or None
             writer.writerow(row)
     
     if export_duet_risk_report and is_ergonomic_risk_report:

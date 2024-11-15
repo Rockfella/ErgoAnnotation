@@ -6,7 +6,7 @@ import csv
 from .ea_constants import frame_from_smpte, pickTagColorForHandExertions
 import os
 from datetime import datetime, timedelta, time
-import re
+#import re
 import numpy as np
 import math
 
@@ -59,6 +59,9 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
 
     # Collect data for each day, used for Actipass and EMG import
     day_to_data = collections.defaultdict(list)
+    datapoint = collections.namedtuple('datapoint',['date','mvc'])
+    dt = np.dtype([('date', 'datetime64[us]'), ('mvc', 'f4')])
+
 
     # Collect data from EMG_RAINFLOW
     rainflow_data = collections.defaultdict(list)
@@ -115,7 +118,6 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
         if start_row_in_csv < 0:
             for i in range(start_row_in_csv):
                 next(reader)
-
         for index, row in enumerate(reader):
             ######################################################################################
             #                                                                                    #
@@ -170,9 +172,9 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                         percent_mvc = float(row[column_emg].strip())
 
                         # Collect the data for this day
-                        day_to_data[date].append(percent_mvc)
+                        day_to_data[date.date()].append(datapoint(date, percent_mvc))
 
-                        date_counter.append(date)
+                        date_counter.append(date.date())
 
                     elif is_matlab_datetime(csv_date):
 
@@ -198,7 +200,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                         day_to_data[date].append(percent_mvc)
 
                         date_counter.append(date)
-            #JOHAN
+        
             elif import_type == Constants.IMPORT_EMG_RAINFLOW:
                 # If the import_type is EMG_RAINFLOW:
                 if start_row_in_csv <= index <= csv_row_end:
@@ -307,7 +309,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
                         datenum_end = row[4]
 
                         start_time = datetime.strptime(
-                            datenum_start, "%d-%b-%Y %H:%M:%S")  # get the date
+                            datenum_start)  # get the date
 
                         end_time = datetime.strptime(
                             datenum_end,  "%d-%b-%Y %H:%M:%S")
@@ -410,8 +412,11 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
             fps = bpy.context.scene.render.fps / bpy.context.scene.render.fps_base
             # downsample the data for each day
             for date in day_to_data:
+                print(date)
+                print(day_to_data[date])
+                darr = np.array(day_to_data[date],dt)
                 day_to_data[date] = downsample_data(
-                    day_to_data[date], interpolate_start, fps)  # adjust numbers as needed
+                    darr['mvc'], interpolate_start, fps) # adjust numbers as needed
 
     num_days = len(day_to_data)
     num_entries = sum(len(values) for values in day_to_data.values())
@@ -428,11 +433,16 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
     # Figure out the start frame for the emgdata:
     if import_type == Constants.IMPORT_EMG and trim_emg_to_masterclock:
         date, activities = next(iter(sorted(day_to_data.items())))
-
+        print("Activities")
+        print(activities)
+        darr = np.array(activities,dt)
+        date = darr['date'][0].astype(datetime)
         emg_time_str = str(date.time())
 
-        ff = "00"
+        #ff = "00"
         hh, mm, ss = emg_time_str.split(":")
+        ff = f"{int(fps*(float(ss)%1))}"
+        ss = f"{int(math.floor(float(ss)))}"
         emg_final_time_str = f"{hh}:{mm}:{ss}:{ff}"
 
         frame_at_emg_time_str = frame_from_smpte(emg_final_time_str)
@@ -461,6 +471,8 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
     
     # Process the data day by day
     for day_index, (date, activities) in enumerate(sorted(day_to_data.items())):
+        darr = np.array(activities,dt)
+        date = darr['date'][0].astype(datetime)
         channel_start = channel_to_import_to  # Which channel day one should end up on
         channel = channel_start - day_index  # Start from channel 10 and go down
         frame_start = 1  # Each day starts at frame 1
@@ -766,28 +778,28 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
             for s in bpy.context.scene.sequence_editor.sequences_all:
                 s.select = False
             # Add a text effect strip
-            #bpy.ops.sequencer.effect_strip_add(
-            #    frame_start=frame_start, frame_end=frame_end, channel=(14 + column_emg), type='TEXT')
+            bpy.ops.sequencer.effect_strip_add(
+                frame_start=frame_start, frame_end=frame_end, channel=(14 + column_emg), type='TEXT')
+        
+            #Get the text strip
+            text_strip = bpy.context.scene.sequence_editor.active_strip
             
-            # Get the text strip
-            #text_strip = bpy.context.scene.sequence_editor.active_strip
-            #
-            ## Set the text content
-            #text_strip.text = "•"
-            #
-            ## Set the font size
-            #text_strip.font_size = 2000
-            #text_strip.transform.scale_x = 0.069319
-            #text_strip.transform.scale_y = 0.069319
-            #text_strip.transform.offset_x = strip.transform.offset_x - 1
-            #text_strip.transform.offset_y = 139.2
+            # Set the text content
+            text_strip.text = "•"
             
-            for event in activities:
+            # Set the font size
+            text_strip.font_size = 2000
+            text_strip.transform.scale_x = 0.069319
+            text_strip.transform.scale_y = 0.069319
+            text_strip.transform.offset_x = strip.transform.offset_x - 1
+            text_strip.transform.offset_y = 139.2
+            
+            for event in darr['mvc']:
                 color = interpolate_color(event)
-                #text_strip.color = color
+                text_strip.color = color
 
                 # Keyframe the color
-                #text_strip.keyframe_insert(data_path="color", frame=move_emg_data_frames + frame_start + frame_memory)
+                text_strip.keyframe_insert(data_path="color", frame=move_emg_data_frames + frame_start + frame_memory)
                 # print(date.time())
                 bpy.context.scene.sequence_editor.sequences_all["EMG_COVER_" + str(column_emg)].crop.min_y = int(
                     (1076 * event))
@@ -813,8 +825,7 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
         ######################################################################################
         
         if import_type == Constants.IMPORT_EMG_RAINFLOW:
-            # Johan
-            #TODO: PRINT OMNIRES
+            
             
             for interval in rainflow_data[key]:
                 # Check if the time ranges overlap
@@ -873,7 +884,9 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
         for area in bpy.context.screen.areas:
             if area.type == 'SEQUENCE_EDITOR':
                 context['area'] = area
-                bpy.ops.screen.area_dupli(context, 'INVOKE_DEFAULT')
+                with bpy.context.temp_override(**context):
+                    bpy.ops.screen.area_dupli('INVOKE_DEFAULT')
+                #bpy.ops.screen.area_dupli(context, 'INVOKE_DEFAULT')
                 break
 
         # Find the new area by comparing the old and new lists of areas
@@ -894,7 +907,9 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
 
                 space.show_locked_time = True
 
-        bpy.ops.screen.area_split(override, direction='HORIZONTAL', factor=0.5)
+        with bpy.context.temp_override(**override):
+            bpy.ops.screen.area_split(direction='HORIZONTAL', factor=0.5)
+        # bpy.ops.screen.area_split(override, direction='HORIZONTAL', factor=0.5)
 
         # Find the new area created by the split
         split_area = next(
@@ -915,7 +930,10 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
             if area.type == 'GRAPH_EDITOR':
                 override = {'window': bpy.context.window,
                             'screen': bpy.context.screen, 'area': area}
-                bpy.ops.graph.smooth(override)
+
+                with bpy.context.temp_override(**override):
+                    bpy.ops.graph.smooth()
+                #bpy.ops.graph.smooth(override)
                 break
 
     # split_area.header_text_set("EMG DATA")
@@ -939,7 +957,8 @@ def read_some_data(context, filepath, csv_row_start, csv_row_end, create_3d_obje
             ctx = bpy.context.copy()
             ctx['area'] = area
             ctx['region'] = area.regions[-1]
-            bpy.ops.graph.view_selected(ctx)
+            with bpy.context.temp_override(**ctx):
+                bpy.ops.graph.view_selected()
 
     return {'FINISHED'}
 
@@ -976,7 +995,7 @@ class ImportSomeData(Operator, ImportHelper):
     interpolate_data: BoolProperty(name="Interpolate", default=True)
     trim_emg_to_masterclock: BoolProperty(
         name="Trim to Master Time", default=True)
-    interpolate_start: IntProperty(name="Interp.Rows/s", default=1000)
+    interpolate_start: FloatProperty(name="Interp.Rows/ss", default=1000.0)
     emg_rain_flow_mvc_collected: IntProperty(name="MVC in KG", default=10)
 
     column_emg: IntProperty(name="EMG Column", default=1)

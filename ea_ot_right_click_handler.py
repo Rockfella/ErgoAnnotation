@@ -1,7 +1,7 @@
 import bpy
 import datetime
-from bpy.types import Operator
-from bpy.types import Sequence
+#from bpy.types import Operator
+#from bpy.types import Sequence
 from .ea_constants import Constants
 
 from .ea_constants import pickTagColorForHandExertions, pickVisualTextColorForHandExertions, get_slot_value, pickVisualTextColorForFreeMode, pickTagColorForFreeMode
@@ -148,6 +148,62 @@ class SEQUENCER_OT_SetRangeToStrips(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class SEQUENCER_OT_add_comment(bpy.types.Operator):
+    bl_idname = "sequencer.add_comment"
+    bl_label = "Add Comment"
+    bl_description = "Add a comment to the selected strip"
+    
+    def_comment: bpy.props.StringProperty(
+        name="Comment",
+        description="",
+        default=""
+        ) # type: ignore
+
+    def execute(self, context):
+        scene = bpy.context.scene
+        if not scene.sequence_editor:
+            print("No sequence editor found in the active scene.")
+            return
+        active_strip = context.scene.sequence_editor.active_strip
+        
+        #Add a custom property named Comment, which can be retrieved later
+        if active_strip:
+            active_strip["Comment"] = self.def_comment
+            self.report({'INFO'}, f"Comment added: {self.def_comment}.")
+        else: 
+            self.report({'INFO'}, "No active strip found.")
+            
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        active_strip = context.scene.sequence_editor.active_strip
+        if "Comment" in active_strip:
+            current_comment = active_strip["Comment"]
+            #Change the placeholder input to the found comment
+            self.def_comment = current_comment
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "def_comment")
+        
+
+
+
+class SEQUENCER_OT_custom_comment(bpy.types.Operator):
+    bl_idname = "sequencer.custom_comment"
+    bl_label = "Comment Annotation"
+    bl_description = "Add a comment to the strip."
+
+    @classmethod
+    def poll(cls, context):
+        return context.selected_sequences
+
+    def execute(self, context):
+        bpy.ops.sequencer.add_comment('INVOKE_DEFAULT')
+        return {'FINISHED'}
+
+
 class SEQUENCER_MT_custom_menu(bpy.types.Menu):
     bl_label = "Edit Annotation"
     bl_idname = "SEQUENCER_MT_custom_menu"
@@ -174,7 +230,6 @@ class SEQUENCER_MT_custom_menu(bpy.types.Menu):
         else:
             print("Not all selected strips have the same name.")
 
-        #TODO: OK NOW WE CAN START BUILDING SO THAT IT ONLY WORKS IF THEY HAVE THE SAME NAME 
 
         if not all_have_same_name:
             #show_warning(
@@ -218,10 +273,3 @@ class SEQUENCER_MT_custom_menu(bpy.types.Menu):
                         break
                     
             
-#def get_slot_value(context, index):
-#    addon_prefs = context.preferences.addons[__package__].preferences
-#    free_channel_vars = addon_prefs.free_channel_vars
-#    # Access the slot using the provided index
-#    slot_key = f"slot_{index}"
-#    slot_value = getattr(free_channel_vars, slot_key)
-#    return str(slot_value)

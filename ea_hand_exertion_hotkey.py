@@ -1,10 +1,11 @@
 
 import bpy
-import time
+#import time
 import datetime
 from bpy.types import Operator
 from .ea_constants import Constants
-from .ea_constants import pickTagColorForHandExertions, pickVisualTextColorForHandExertions, get_slot_value, pickVisualTextColorForFreeMode, pickTagColorForFreeMode
+from .ea_constants import (pickTagColorForHandExertions, pickVisualTextColorForHandExertions, 
+                           get_slot_value, pickVisualTextColorForFreeMode, pickTagColorForFreeMode, get_pmc_value, get_pmc_id)
 
 # ------------------------------------------------------------------------
 #    HOTKEY: ZERO
@@ -338,95 +339,124 @@ class onReleaseKeyTEN(Operator):
 
 def executeThePressFromKey(self, context, key):
     # global id  # Declare id as global
-
-    # Get the active scene
-    scene = bpy.context.scene
-    sequence_editor = scene.sequence_editor
-
-    # Number of sequences to produce ID
-    num_sequences = len(sequence_editor.sequences)
-    # Next id
-    num_sequence_id = num_sequences + 1
-
     
+    #Deselect all strips to perfom operations on the newly created strip
+    bpy.ops.sequencer.deselect_all_strips()
     
-    choosen_tag_color = "COLOR_04"
+    # Check if the handler is active before removing it
+    if auto_drag_strip in bpy.app.handlers.frame_change_post:
+        bpy.app.handlers.frame_change_post.remove(auto_drag_strip)
+        print("auto_drag_strip handler removed")
+        bpy.data.scenes[context.scene.name].active_hotkey = -2
 
+    else:
+        # Get the active scene
+        scene = bpy.context.scene
+        sequence_editor = scene.sequence_editor
     
-
-    curren_input = bpy.data.scenes[bpy.context.scene.name].active_input
-    current_input_str = ""
-    text_strip_visual_text = ""
-    text_strip_visual_location = (0,0)
-    text_strip_visual_color = (0.35, 0.82, 0.51, 1.0) #default
-
-    current_input_channel = -1
-    if curren_input == Constants.HAND_EX_L[0]:
-        current_input_str = Constants.HAND_EX_L[2]
-        current_input_channel = Constants.HAND_EX_L[1]
-        text_strip_visual_text = current_input_str + " MAGNITUDE:" + str(key)
-        text_strip_visual_location = (0.05, 0.18)
-        choosen_tag_color = pickTagColorForHandExertions(key)
-        text_strip_visual_color = pickVisualTextColorForHandExertions(key)
+        # Number of sequences to produce ID
+        num_sequences = len(sequence_editor.sequences)
+        # Next id
+        num_sequence_id = num_sequences + 1
+    
         
-
-    elif curren_input == Constants.HAND_EX_R[0]:
-        current_input_str = Constants.HAND_EX_R[2] 
-        current_input_channel = Constants.HAND_EX_R[1]
-        text_strip_visual_text = current_input_str + " MAGNITUDE:" + str(key)
-        text_strip_visual_location = (0.05, 0.25)
-        choosen_tag_color = pickTagColorForHandExertions(key)
-        text_strip_visual_color = pickVisualTextColorForHandExertions(key)
-
-    elif curren_input == Constants.FREE_CHANNEL[0]:
-        current_input_str = Constants.FREE_CHANNEL[2]
-        current_input_channel = Constants.FREE_CHANNEL[1]
-        text_strip_visual_text = current_input_str + ", " + get_slot_value(context, key)
-        text_strip_visual_location = (0.05, 0.32)
-        choosen_tag_color = pickTagColorForFreeMode(key)
-        text_strip_visual_color = pickVisualTextColorForFreeMode(key)
-
-    #Remember the default channel to help the visual position
-    current_input_channel_base = current_input_channel
-
-    time_now = datetime.datetime.now()
-    formatted_date_time = time_now.strftime("%Y-%m-%d %H:%M:%S")
-    sequence_name_hand_exertion = current_input_str + ", " + key + ", " + str(num_sequence_id) + ", " + formatted_date_time
-    sequence_name_free_channel = current_input_str + ", " + str(get_slot_value(context, key)) + \
-        ", " + str(num_sequence_id) + ", " + formatted_date_time
-
-    current_frame = bpy.context.scene.frame_current
+        
+        choosen_tag_color = "COLOR_04"
     
-
-    #In case HAND_EXERTIONS is active we can direclty use the hotkey as str, otherwise use other
-    image_str = ""
-    if curren_input == Constants.HAND_EX_L[0]:
-        image_str = sequence_name_hand_exertion
-
-    elif curren_input == Constants.HAND_EX_R[0]:
-        image_str = sequence_name_hand_exertion
-    elif curren_input == Constants.FREE_CHANNEL[0]:
-        image_str = sequence_name_free_channel
-
-    strip_exists = False
-
-    if sequence_editor is not None:
-        free_channel_found = False
+        
     
-    while not free_channel_found:
+        curren_input = bpy.data.scenes[bpy.context.scene.name].active_input
+        current_input_str = ""
+        text_strip_visual_text = ""
+        text_strip_visual_location = (0,0)
+        text_strip_visual_color = (0.35, 0.82, 0.51, 1.0) #default
+    
+        current_input_channel = -1
+        if curren_input == Constants.HAND_EX_L[0]:
+            current_input_str = Constants.HAND_EX_L[2]
+            current_input_channel = Constants.HAND_EX_L[1]
+            text_strip_visual_text = current_input_str + " MAGNITUDE:" + str(key)
+            text_strip_visual_location = (0.05, 0.18)
+            choosen_tag_color = pickTagColorForHandExertions(key)
+            text_strip_visual_color = pickVisualTextColorForHandExertions(key)
+            
+    
+        elif curren_input == Constants.HAND_EX_R[0]:
+            current_input_str = Constants.HAND_EX_R[2] 
+            current_input_channel = Constants.HAND_EX_R[1]
+            text_strip_visual_text = current_input_str + " MAGNITUDE:" + str(key)
+            text_strip_visual_location = (0.05, 0.25)
+            choosen_tag_color = pickTagColorForHandExertions(key)
+            text_strip_visual_color = pickVisualTextColorForHandExertions(key)
+    
+        elif curren_input == Constants.FREE_CHANNEL[0]:
+            current_input_str = Constants.FREE_CHANNEL[2]
+            current_input_channel = Constants.FREE_CHANNEL[1]
+            text_strip_visual_text = current_input_str + ", " + get_slot_value(context, key)
+            text_strip_visual_location = (0.05, 0.32)
+            choosen_tag_color = pickTagColorForFreeMode(key)
+            text_strip_visual_color = pickVisualTextColorForFreeMode(key)
+            
+           
+        elif curren_input == Constants.POST_MOVE_CODE[0]:
+            current_input_str = Constants.POST_MOVE_CODE[2]
+            current_input_channel = Constants.POST_MOVE_CODE[1]
+            
+            pmc_value = get_pmc_value(key)
+            pmc_id = get_pmc_id(key)
+            
+            text_strip_visual_text = current_input_str + ", " + pmc_value + ", " + str(pmc_id)
+            text_strip_visual_location = (0.05, 0.32)
+            choosen_tag_color = pickTagColorForFreeMode(key)
+            text_strip_visual_color = pickVisualTextColorForFreeMode(key)
+    
+        #Remember the default channel to help the visual position
+        current_input_channel_base = current_input_channel
+    
+        time_now = datetime.datetime.now()
+        formatted_date_time = time_now.strftime("%Y-%m-%d %H:%M:%S")
+        sequence_name_hand_exertion = current_input_str + ", " + key + ", " + str(num_sequence_id) + ", " + formatted_date_time
+        sequence_name_free_channel = current_input_str + ", " + str(get_slot_value(context, key)) + \
+            ", " + str(num_sequence_id) + ", " + formatted_date_time
+            
+        sequence_name_pmc_channel = text_strip_visual_text  + \
+            ", " + str(num_sequence_id) + ", " + formatted_date_time
+    
+        current_frame = bpy.context.scene.frame_current
+        
+    
+        #In case HAND_EXERTIONS is active we can direclty use the hotkey as str, otherwise use other
+        image_str = ""
+        if curren_input == Constants.HAND_EX_L[0]:
+            image_str = sequence_name_hand_exertion
+    
+        elif curren_input == Constants.HAND_EX_R[0]:
+            image_str = sequence_name_hand_exertion
+        elif curren_input == Constants.FREE_CHANNEL[0]:
+            image_str = sequence_name_free_channel
+            
+        elif curren_input == Constants.POST_MOVE_CODE[0]:
+            image_str = sequence_name_pmc_channel
+    
         strip_exists = False
-        for seq in sequence_editor.sequences:
-            if seq.channel == current_input_channel and (seq.frame_final_start <= current_frame and seq.frame_final_end >= current_frame):
-                strip_exists = True
-                current_input_channel += 1  # Move to the channel above
-               
-                break
-
-        # If after checking all strips, no strip occupies the current channel at the given frame:
-        if not strip_exists:
-            free_channel_found = True
-            add_strip(image_str, current_frame, current_input_channel, text_strip_visual_text,
-                      text_strip_visual_color, text_strip_visual_location, choosen_tag_color, current_input_channel_base)
+    
+        if sequence_editor is not None:
+            free_channel_found = False
+        
+        while not free_channel_found:
+            strip_exists = False
+            for seq in sequence_editor.sequences:
+                if seq.channel == current_input_channel and (seq.frame_final_start <= current_frame and seq.frame_final_end >= current_frame):
+                    strip_exists = True
+                    current_input_channel += 1  # Move to the channel above
+                   
+                    break
+                
+            # If after checking all strips, no strip occupies the current channel at the given frame:
+            if not strip_exists:
+                free_channel_found = True
+                add_strip(image_str, current_frame, current_input_channel, text_strip_visual_text,
+                          text_strip_visual_color, text_strip_visual_location, choosen_tag_color, current_input_channel_base)
 
 
 def add_strip(image_str, current_frame, current_input_channel, text_strip_visual_text, text_strip_visual_color, text_strip_visual_location, choosen_tag_color, current_input_channel_base):
@@ -437,7 +467,11 @@ def add_strip(image_str, current_frame, current_input_channel, text_strip_visual
         frame_end=current_frame + 5,
         channel=current_input_channel
     )
-
+    
+    #Selecting the newly created strip so operations can be run on it
+    text_strip.select = True
+    bpy.context.scene.sequence_editor.active_strip = text_strip
+    
     text_strip.text = text_strip_visual_text
     # Set the font and size for the text strip
     text_strip.font_size = 50.0
@@ -482,26 +516,34 @@ def visual_location_from_channel(index, current_input_channel_base, text_strip_v
 
 def executeTheReleaseFromKey(self, context, key):
 
+    #TODO: TEST, REMOVE AFTER TESTING
     # If we ever need markers
     # scene.timeline_markers.new(num_markers_str, frame=current_frame)
     print("EXECUTED RELEASE")
     # Stop the drag of the sequence
-    if auto_drag_strip in bpy.app.handlers.frame_change_post:
-        bpy.app.handlers.frame_change_post.remove(auto_drag_strip)
+    
+    #if auto_drag_strip in bpy.app.handlers.frame_change_post:
+    #    bpy.app.handlers.frame_change_post.remove(auto_drag_strip)
     
 
 
 def auto_drag_strip(scene, depsgraph):
     #print("DRAGGING")
-    scene = bpy.context.scene
+    active_strip = bpy.context.scene.sequence_editor.active_strip.type
+    if active_strip == 'TEXT' and active_strip != '@master.time':
+        #TODO: This was added to handle when active strips are deleted
+    
+        scene = bpy.context.scene
 
-    current_frame = bpy.context.scene.frame_current
-    sequence_editor = scene.sequence_editor
+        current_frame = bpy.context.scene.frame_current
+        sequence_editor = scene.sequence_editor
 
-    num_sequences = len(sequence_editor.sequences)
-    active_strip = sequence_editor.sequences[num_sequences - 1]
+        num_sequences = len(sequence_editor.sequences)
+        active_strip = sequence_editor.sequences[num_sequences - 1]
 
-    actual_end = (current_frame - active_strip.frame_start + 1) #adding one will make the current input visiable
-    active_strip.frame_final_duration = int(actual_end)
-
+        actual_end = (current_frame - active_strip.frame_start + 1) #adding one will make the current input visiable
+        active_strip.frame_final_duration = int(actual_end)
+    else:
+        #If we are trying to drag empty
+        bpy.app.handlers.frame_change_post.remove(auto_drag_strip)
 

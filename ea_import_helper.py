@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, time
 import re
 import numpy as np
 
+
 from .ea_constants import Constants
 
 
@@ -105,7 +106,10 @@ def iso8601_to_python_datetime(iso8601_string):
     try:
         return datetime.strptime(cleaned_string, "%Y-%m-%d %H:%M:%S")
     except ValueError:
-        return datetime.strptime(cleaned_string, "%Y-%m-%d %H:%M")
+        try:
+            return datetime.strptime(cleaned_string, "%Y-%m-%d %H:%M:%S.%f")
+        except ValueError:
+            return datetime.strptime(cleaned_string, "%Y-%m-%d %H:%M")
 
 
 def downsample_data(data, old_fps, new_fps):
@@ -121,7 +125,28 @@ def downsample_data(data, old_fps, new_fps):
 
     return new_data
 
+def upsample_data(data, old_fps, new_fps):
+    if new_fps <= old_fps:
+        raise ValueError("New FPS should be greater than old FPS for up-sampling.")
 
+    # Create an array representing the old timestamps
+    old_time = np.linspace(0, len(data) / old_fps, len(data))
+
+    # Create an array representing the new timestamps
+    new_time = np.linspace(0, len(data) / old_fps, round(len(data) * new_fps / old_fps))
+
+    # Interpolate the data to the new timestamps
+    new_data = np.interp(new_time, old_time, data)
+
+    return new_data
+
+def is_numeric(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+    
 def detect_delimiter(csv_file):
     with open(csv_file, 'r') as f:
         line = f.readline()
@@ -138,10 +163,14 @@ def is_iso8601(date_string):
         return True
     except ValueError:
         try:
-            datetime.strptime(cleaned_string, "%Y-%m-%d %H:%M")
+            datetime.strptime(cleaned_string, "%Y-%m-%d %H:%M:%S.%f")
             return True
         except ValueError:
-            return False
+            try:
+                datetime.strptime(cleaned_string, "%Y-%m-%d %H:%M")
+                return True
+            except ValueError:
+                return False
 
 
 def is_matlab_datetime(date_string):
@@ -172,6 +201,8 @@ def find_date_format(date_string):
         return lambda s: datetime.strptime(s, "%d-%b-%Y %H:%M:%S")
     else:
         return None  # or raise an error
+
+
 
 
 def find_first_row_with_date(filepath_find_first, target_date, delimiter):
