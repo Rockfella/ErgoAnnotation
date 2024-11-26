@@ -39,3 +39,5 @@ __pycache__/ea_inputswitch.cpython-310.pyc
 __pycache__/ea_op.cpython-310.pyc
 __pycache__/ea_ot_right_click_handler.cpython-310.pyc
 __pycache__/ea_pnl.cpython-310.pyc
+__pycache__/
+.vscode/
