@@ -1,0 +1,10 @@
+cff-version: 1.1.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Rydgård (former Sleman)"
+  given-names: "Johan"
+title:Rockfella/ErgoAnnotation: v.1.2.1-alpha
+version: v.1.2.1-alpha
+doi: 10.5281/zenodo.14222271
+date-released: 2024-11-26
+url: "https://github.com/Rockfella/ErgoAnnotation"
