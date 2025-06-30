@@ -225,7 +225,7 @@ class MY_OT_AddFreeChannelInput(bpy.types.Operator):
         free_channel_vars = addon_prefs.free_channel_vars
 
         #setting a cap on how many slots that can be added
-        if free_channel_vars.slots_to_show < 20:
+        if free_channel_vars.slots_to_show < 9:
             free_channel_vars.slots_to_show += 1
             bpy.ops.preferences.save()
         else:
@@ -841,8 +841,8 @@ def setWaterMasterTime(self, context):
     text_strip.use_box = True
     text_strip.shadow_color = (0, 0, 0, 0)  # Set the shadow color
     # text_strip.wrap_width = 300  # Set the wrap width of the text strip
-    text_strip.align_x = 'LEFT'  # Set the horizontal alignment
-    text_strip.align_y = 'CENTER'  # Set the vertical alignment
+    text_strip.alignment_x = 'LEFT'  # Set the horizontal alignment
+    text_strip.anchor_x = 'LEFT'  # Set the vertical 
 
 
 

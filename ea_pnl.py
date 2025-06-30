@@ -115,49 +115,19 @@ class EA_PT_Panel_Free_Channel(Panel):
 
         # Loop through each StringProperty in the class
         loop_index = 0
+        
         for key, prop in free_channel_vars.bl_rna.properties.items():
-            # Skip properties that are not StringProperties
-            
             if key.startswith('slot_') and loop_index <= slots_to_show:
+                color_key = f"color_{loop_index}"
 
-               
-            
-                row_next = layout.row()
-                split = row_next.split(factor=1.0)
-                if (loop_index + 1) <= 10:
-                    default = str('SEQUENCE_COLOR_0')
-                    loop_index_str = str(loop_index + 1)
-                    iconstr = default + loop_index_str
+                row = layout.row()
+                row_split = row.split(factor=0.05)
 
-                    if (loop_index + 1) == 1:
-                        iconstr = str('SEQUENCE_COLOR_01')
-                    elif (loop_index + 1) == 2:
-                        iconstr = str('SEQUENCE_COLOR_02')
-                    elif (loop_index + 1) == 3:
-                        iconstr = str('SEQUENCE_COLOR_03')
-                    elif (loop_index + 1) == 4:
-                        iconstr = str('SEQUENCE_COLOR_04')
-                    elif (loop_index + 1) == 5:
-                        iconstr = str('SEQUENCE_COLOR_05')
-                    elif (loop_index + 1) == 6:
-                        iconstr = str('SEQUENCE_COLOR_06')
-                    elif (loop_index + 1) == 7:
-                        iconstr = str('SEQUENCE_COLOR_07')
-                    elif (loop_index + 1) == 8:
-                        iconstr = str('SEQUENCE_COLOR_08')
-                    elif (loop_index + 1) >= 10:
-                        iconstr = str('SEQUENCE_COLOR_04')
+                color_col = row_split.column()
+                color_col.prop(free_channel_vars, color_key, text="")
 
-
-                    prop_ui = split.prop(free_channel_vars, key, text='NUM ' + str(loop_index), icon= iconstr,
-                                         expand=True)
-                else:
-                    prop_ui = split.prop(free_channel_vars, key, text=str(loop_index),
-                                         expand=True)
-                current_value = getattr(free_channel_vars, key)
-                    
-                
-                
+                input_col = row_split.column()
+                input_col.prop(free_channel_vars, key, text='NUM ' + str(loop_index), expand=True)
 
                 loop_index += 1
 

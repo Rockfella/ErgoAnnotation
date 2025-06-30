@@ -26,7 +26,16 @@ class FREE_CHANNEL_VARS_PG(PropertyGroup):
     slot_17: bpy.props.StringProperty(name="FREE_CHANNEL_VAR_17", default="Empty17")
     slot_18: bpy.props.StringProperty(name="FREE_CHANNEL_VAR_18", default="Empty18")
     slot_19: bpy.props.StringProperty(name="FREE_CHANNEL_VAR_19", default="Empty19")
-
+    color_0: bpy.props.FloatVectorProperty(name="Color 0", subtype='COLOR', min=0.0, max=1.0, size=3, default=(0.603831, 0.10224, 0.084375))
+    color_1: bpy.props.FloatVectorProperty(name="Color 1", subtype='COLOR', min=0.0, max=1.0, size=3, default=(0.603831, 0.254152, 0.064804))
+    color_2: bpy.props.FloatVectorProperty(name="Color 2", subtype='COLOR', min=0.0, max=1.0, size=3, default=(0.450779, 0.366255, 0.049707))
+    color_3: bpy.props.FloatVectorProperty(name="Color 3", subtype='COLOR', min=0.0, max=1.0, size=3, default=(0.107022, 0.318555, 0.107022))
+    color_4: bpy.props.FloatVectorProperty(name="Color 4", subtype='COLOR', min=0.0, max=1.0, size=3, default=(0.082282, 0.346709, 0.603831))
+    color_5: bpy.props.FloatVectorProperty(name="Color 5", subtype='COLOR', min=0.0, max=1.0, size=3, default=(0.266357, 0.099897, 0.701117))
+    color_6: bpy.props.FloatVectorProperty(name="Color 6", subtype='COLOR', min=0.0, max=1.0, size=3, default=(0.564707, 0.171438, 0.479312))
+    color_7: bpy.props.FloatVectorProperty(name="Color 7", subtype='COLOR', min=0.0, max=1.0, size=3, default=(0.318555, 0.141266, 0.084375))
+    color_8: bpy.props.FloatVectorProperty(name="Color 8", subtype='COLOR', min=0.0, max=1.0, size=3, default=(0.215856, 0.215856, 0.215856))
+    color_9: bpy.props.FloatVectorProperty(name="Color 9", subtype='COLOR', min=0.0, max=1.0, size=3, default=(0.107022, 0.318555, 0.1070220))
 
 # Define the addon preferences
 class FREE_CHANNEL_Preferences(AddonPreferences):

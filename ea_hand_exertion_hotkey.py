@@ -376,7 +376,7 @@ def executeThePressFromKey(self, context, key):
             current_input_str = Constants.HAND_EX_L[2]
             current_input_channel = Constants.HAND_EX_L[1]
             text_strip_visual_text = current_input_str + " MAGNITUDE:" + str(key)
-            text_strip_visual_location = (0.05, 0.18)
+            text_strip_visual_location = (0.15, 0.18)
             choosen_tag_color = pickTagColorForHandExertions(key)
             text_strip_visual_color = pickVisualTextColorForHandExertions(key)
             
@@ -385,7 +385,7 @@ def executeThePressFromKey(self, context, key):
             current_input_str = Constants.HAND_EX_R[2] 
             current_input_channel = Constants.HAND_EX_R[1]
             text_strip_visual_text = current_input_str + " MAGNITUDE:" + str(key)
-            text_strip_visual_location = (0.05, 0.25)
+            text_strip_visual_location = (0.15, 0.25)
             choosen_tag_color = pickTagColorForHandExertions(key)
             text_strip_visual_color = pickVisualTextColorForHandExertions(key)
     
@@ -393,7 +393,7 @@ def executeThePressFromKey(self, context, key):
             current_input_str = Constants.FREE_CHANNEL[2]
             current_input_channel = Constants.FREE_CHANNEL[1]
             text_strip_visual_text = current_input_str + ", " + get_slot_value(context, key)
-            text_strip_visual_location = (0.05, 0.32)
+            text_strip_visual_location = (0.15, 0.32)
             choosen_tag_color = pickTagColorForFreeMode(key)
             text_strip_visual_color = pickVisualTextColorForFreeMode(key)
             
@@ -406,7 +406,7 @@ def executeThePressFromKey(self, context, key):
             pmc_id = get_pmc_id(key)
             
             text_strip_visual_text = current_input_str + ", " + pmc_value + ", " + str(pmc_id)
-            text_strip_visual_location = (0.05, 0.32)
+            text_strip_visual_location = (0.15, 0.32)
             choosen_tag_color = pickTagColorForFreeMode(key)
             text_strip_visual_color = pickVisualTextColorForFreeMode(key)
     
@@ -457,9 +457,10 @@ def executeThePressFromKey(self, context, key):
                 free_channel_found = True
                 add_strip(image_str, current_frame, current_input_channel, text_strip_visual_text,
                           text_strip_visual_color, text_strip_visual_location, choosen_tag_color, current_input_channel_base)
-
-
-def add_strip(image_str, current_frame, current_input_channel, text_strip_visual_text, text_strip_visual_color, text_strip_visual_location, choosen_tag_color, current_input_channel_base):
+# Function to add a strip with the given parameters
+def add_strip(image_str, current_frame, current_input_channel, text_strip_visual_text,
+              text_strip_visual_color, text_strip_visual_location, choosen_tag_color,
+              current_input_channel_base):
     text_strip = bpy.data.scenes[bpy.context.scene.name].sequence_editor.sequences.new_effect(
         name=image_str,
         type='TEXT',
@@ -468,13 +469,11 @@ def add_strip(image_str, current_frame, current_input_channel, text_strip_visual
         channel=current_input_channel
     )
     
-    #Selecting the newly created strip so operations can be run on it
     text_strip.select = True
     bpy.context.scene.sequence_editor.active_strip = text_strip
     
-    text_strip.text = text_strip_visual_text
-    # Set the font and size for the text strip
-    text_strip.font_size = 50.0
+    text_strip.text = str(text_strip_visual_text)
+    text_strip.font_size = 25.0
     text_strip.color = text_strip_visual_color
 
     text_strip.use_bold = True
@@ -486,8 +485,8 @@ def add_strip(image_str, current_frame, current_input_channel, text_strip_visual
     text_strip.use_box = True
     text_strip.shadow_color = (0, 0, 0, 0)  # Set the shadow color
     # text_strip.wrap_width = 300  # Set the wrap width of the text strip
-    text_strip.align_x = 'LEFT'  # Set the horizontal alignment
-    text_strip.align_y = 'CENTER'  # Set the vertical alignment
+    text_strip.alignment_x = 'LEFT'  # Set the horizontal alignment
+    text_strip.anchor_x = 'LEFT'  # Set the vertical alignment
     text_strip.color_tag = choosen_tag_color
 
     current_frame = bpy.context.scene.frame_current

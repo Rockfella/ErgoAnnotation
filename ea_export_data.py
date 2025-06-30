@@ -802,6 +802,7 @@ def save_all_files(context, filepath, export_strip_as_row, is_ergonomic_risk_rep
             duet_report_titel = "DUET Right Hand Scores"
         elif duet_options == "OPTION2":
             duet_report_titel = "DUET Left Hand Scores"
+        
         create_a4_svg_with_text_and_table(svg_filepath, duet_report_titel, column_1_svg_data,
                                           column_2_svg_data, column_3_svg_data, column_3_svg_data, column_3_svg_data, str_list_to_report)
 
@@ -811,7 +812,6 @@ def save_all_files(context, filepath, export_strip_as_row, is_ergonomic_risk_rep
         HAL_raw_data_L = sir_data_HAND_EX_L
         HAL_raw_data_R = sir_data_HAND_EX_R
         
-
         choosen_hand = HAL_raw_data_R
 
         ## TODO: Make sure we change the name here
@@ -840,7 +840,7 @@ def save_all_files(context, filepath, export_strip_as_row, is_ergonomic_risk_rep
 
                 duty_cycle_onTime = previous_grip_data[1] - previous_grip_data[0]
                 duty_cycle_offTime = grip[0] - previous_grip_data[1] 
-
+                
                 global_on_time += duty_cycle_onTime
                 global_off_time += duty_cycle_offTime
 
@@ -972,7 +972,33 @@ def save_all_files(context, filepath, export_strip_as_row, is_ergonomic_risk_rep
         additional_text = str_list_to_report
 
          # Create the actual graph
-        create_HAL_graph_svg_with_points(display_points_for_HAL_graph, svg_hal_filepath, hal_report_titel, additional_text)                   
+        create_HAL_graph_svg_with_points(display_points_for_HAL_graph, svg_hal_filepath, hal_report_titel, additional_text)  
+        
+        
+      
+        # new filename
+        base_name, ext = os.path.splitext(filepath)
+        new_filepath_hal_csv = f"{base_name}_HAL_risk_report{hand_text}.csv"
+        column_headers_hal = ["Filename", 'HAL', 'NPF', 'SCORE: NPF / (10 - HAL)', 'LOW/MEDIUM/HIGH']
+        # Save the risk report to the new csv file
+        with open(new_filepath_hal_csv, 'w', encoding='utf-8', newline='') as f:
+            writer = csv.writer(f, delimiter='\t')  # Use tab as delimiter
+            # Get the active scene
+            writer.writerow(column_headers_hal)
+            hal_tlv_score_2001 = global_calculated_npf / (10 - global_grip_HAL)
+            hal_tlv_score = (0.056 * global_grip_HAL) + (0.1 * global_calculated_npf)
+            
+            hal_category_score = ""
+            if hal_tlv_score < 0.36:
+                hal_category_score = "LOW"
+            elif hal_tlv_score >= 0.36 and hal_tlv_score < 0.56:
+                hal_category_score = "MEDIUM"
+            elif hal_tlv_score >= 0.56:
+                hal_category_score = "HIGH"
+            
+            last_part_basename = os.path.basename(base_name)
+            columns_HAL = [f"{last_part_basename}",  f'{round(global_grip_HAL, 5)}', f'{round(global_calculated_npf, 5)}', f'{round(hal_tlv_score, 5)}', f'{hal_category_score}', "HAL SCORE based on ACGIH TLV revised 2018 guidelines"]
+            writer.writerow(columns_HAL)                 
 
 
 

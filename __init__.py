@@ -15,8 +15,8 @@ bl_info = {
     "name" : "ergoannotation",
     "author" : "Johan Sleman",
     "description" : "",
-    "blender" : (2, 80, 0),
-    "version" : (1, 2, 1),
+    "blender" : (4, 4, 3),
+    "version" : (1, 2, 2),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
