@@ -84,11 +84,12 @@ def read_and_import(context, self, filepath, channel_to_import_to, import_type, 
         bpy.ops.object.add(type='EMPTY', location=(0, 0, 0))
         empty = bpy.context.object
         empty.name = col_name
-        #print("values", values)
-        # Add a custom property
-        bpy.types.Object.imported_graph = bpy.props.FloatProperty(name=col_name, default=0.0)
-        empty["imported_graph"] = 0.0
 
+        #Adding a dummy keyframe to avoid a know blender bug, where views dont update without "manual" keyframe_inserts
+        empty[col_name] = float(values[0])
+        empty.keyframe_insert(data_path=f'["{col_name}"]', frame=frames[0] * scale_factor + amount_to_move)
+        
+        
         # Get the action associated with the empty object, create if it doesn't exist
         if not empty.animation_data:
             empty.animation_data_create()
@@ -159,9 +160,13 @@ def read_and_import(context, self, filepath, channel_to_import_to, import_type, 
                         
                         with bpy.context.temp_override(**override):
 
-                            bpy.ops.graph.select_all(action='SELECT')
-                            bpy.ops.graph.smooth()
-                            bpy.ops.graph.select_all(action='DESELECT')
+                            if bpy.ops.graph.select_all.poll():
+                                bpy.ops.graph.select_all(action='SELECT')
+                                bpy.ops.graph.smooth()
+                                bpy.ops.graph.select_all(action='DESELECT')
+                            else:
+                                    self.report({'INFO'}, f"The {area.type} could not smooth data.")
+                            
 
                         break
                 break
@@ -188,13 +193,21 @@ def read_and_import(context, self, filepath, channel_to_import_to, import_type, 
                         with bpy.context.temp_override(**override):
                             if editor == "GRAPH_EDITOR":
                                 bpy.ops.graph.view_all()
-                                bpy.ops.graph.select_all(action='DESELECT')
+                                if bpy.ops.graph.select_all.poll():
+                                    bpy.ops.graph.select_all(action='DESELECT')
+                                else:
+                                    self.report({'INFO'}, f"The {editor} could not find data.")
+                                
                             elif editor == "SEQUENCE_EDITOR":
 
                                 #For some reason we need to do this 2 times in order to get all strips in view
                                 bpy.ops.sequencer.view_all()
                                 bpy.ops.sequencer.view_all()
-                                bpy.ops.sequencer.select_all(action='DESELECT')
+                                
+                                if bpy.ops.sequencer.select_all.poll():
+                                    bpy.ops.sequencer.select_all(action='DESELECT')
+                                else:
+                                    self.report({'INFO'}, f"The {editor} could not find data.")
                         
                         break
                 break   
