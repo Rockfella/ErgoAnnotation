@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Johan Sleman",
     "description" : "",
     "blender" : (4, 4, 3),
-    "version" : (1, 2, 2),
+    "version" : (1, 2, 3),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
